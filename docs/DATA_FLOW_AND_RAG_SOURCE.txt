@@ -1,0 +1,294 @@
+================================================================================
+COMPLETE DATA FLOW AND RAG DATASET SOURCE
+================================================================================
+
+📊 DATASET SOURCES (Where RAG gets data)
+================================================================================
+
+  OPTION 1: Manual Seeding
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  └─ scripts/seed_rag.py
+     └─ Hard-coded examples:
+        • 3 anomalous: SQL Injection, XSS, Path Traversal
+        • 3 normal: /api/users, /search, /home
+     └─ Calls: add_rag_example(text, is_anomalous=bool, attack_type=str)
+     └─ Stores in: ChromaDB in-memory collection "soc_attacks"
+     └─ Run: python scripts/seed_rag.py
+
+
+  OPTION 2: CSIC2010 Dataset (61,792 items)
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  └─ scripts/seed_rag_from_csic.py
+     └─ Source: Hugging Face Hub
+        https://huggingface.co/datasets/nquangit/CSIC2010_dataset_classification
+     └─ Downloads: Real HTTP request payloads with classification labels
+     └─ Extracts columns: request (HTTP text) + label (normal/attack classification)
+     └─ Auto-detects: is_anomalous = (label != "normal")
+     └─ Stores: 61,792 items into ChromaDB
+     └─ Run: pip install datasets
+          python scripts/seed_rag_from_csic.py
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ⚠️  IMPORTANT: Currently NO dataset is pre-loaded!                          │
+│                                                                              │
+│    ChromaDB starts EMPTY. You must run seed_rag.py OR seed_rag_from_csic.py│
+│    to populate it BEFORE using the system.                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+🔄 COMPLETE REQUEST FLOW (Using RAG)
+================================================================================
+
+User submits HTTP request(s)
+        ↓
+   [graph_app.py] Entry: soc_app.invoke({"requests": [...]})
+        ↓
+┌──────────────────────────────────────────────────────────────────────────┐
+│  NODE 1: "decode"  (batch_decoder)                                       │
+│  ✓ Parse batch input → split into individual requests                   │
+│  Output: state["items"] = [{raw_request, ...}, ...]                      │
+└──────────────────────────────────────────────────────────────────────────┘
+        ↓
+┌──────────────────────────────────────────────────────────────────────────┐
+│  NODE 2: "rule"  (nodes_rule.py → rule_engine)                          │
+│  ✓ Apply OWASP CRS patterns (80+ regex across 15 attack types)          │
+│  ✓ Calculate anomaly score, severity, attack_type                       │
+│  ✓ Set blocked=true if score ≥ threshold (5)                            │
+│  Output: item["rule_score"], item["severity"], item["blocked"]           │
+│          item["attack_type"], item["evidence"]                            │
+└──────────────────────────────────────────────────────────────────────────┘
+        ↓
+┌──────────────────────────────────────────────────────────────────────────┐
+│  NODE 3: "router"  (nodes_router.py)                                     │
+│  ✓ If blocked by rule → set final_msg with "[BLOCKED] ..." message       │
+│  Conditional decision: route_after_rule()                                 │
+└──────────────────────────────────────────────────────────────────────────┘
+        ↓
+    ┌─────────────────────┬─────────────────────────────┐
+    │                     │                             │
+    ↓ (fast path)         ↓ (slow path)                 │
+  ALL BLOCKED?      NOT ALL BLOCKED?                   │
+    │                     │                             │
+    ├─→ cache_save ←──────┴─────────────────────────────┤
+    │                                                   │
+    └─→ NODE 5a: "cache"  (nodes_cache.py) ←─────────┘
+          ✓ For NON-blocked items:
+          
+          CACHE HIT? → Skip to llm_output restoration
+          
+          CACHE MISS? → RAG VECTOR SEARCH:
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+          1. SentenceTransformer encodes request text
+          2. Queries ChromaDB for top-3 similar items
+          3. Returns: [
+               {raw_request: "...", label: "anomalous/normal", attack_type: "..."},
+               {raw_request: "...", label: "...", attack_type: "..."},
+               {raw_request: "...", label: "...", attack_type: "..."}
+             ]
+          4. Formats as: "[ANOMALOUS] SQL Injection: ...\n[NORMAL] /api/users\n..."
+          5. Stores in: item["rag_context"]
+          ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            ↓
+    NODE 6: "llm"  (nodes_llm.py → llm_backend.py)
+    ✓ Skip if: blocked OR cache_hit
+    ✓ Call Groq LLM with:
+      - SYSTEM PROMPT: "You are SOC analyst. No guessing..."
+      - USER MESSAGE: 
+        HTTP REQUEST: {query}
+        RELATED CONTEXT (RAG):
+        {rag_context}
+        Return verdict.
+    ✓ Get LLM analysis → store in item["llm_output"]
+            ↓
+    NODE 7: "cache_save"  (nodes_cache_save.py)
+    ✓ For non-blocked items not yet cached:
+      Save to cache: {
+        "final_msg": ...,
+        "llm_output": ...,
+        "attack_type": ...,
+        "severity": ...,
+        "rule_score": ...,
+        "evidence": ...
+      }
+    ✓ Cache key: SHA256(request.lower())
+    ✓ At end of both paths (fast & slow join here)
+            ↓
+    NODE 8: "response"  (nodes_response.py)
+    ✓ Format output to rich JSON:
+      {
+        "label": "...",                 
+        "attack_group": "...",          
+        "attack_type": "...",           
+        "confidence": 0.0-1.0,          
+        "risk_score": 0-100,            
+        "severity": "CRITICAL/ERROR/...",
+        "evidence": "...",              
+        "observed_patterns": [...],     
+        "suggested_actions": [...],     
+        "route": "fast"/"slow",         
+        "event_type": "...",            
+        "source": "rule_engine"/"llm_explainer",
+        "explanation": "...",           
+        "learning_note": "...",         
+        "hallucination_suspected": bool,
+        "generated_at": "ISO timestamp",
+        "llm_model": "llama-3.3-70b-versatile"  (if from LLM)
+      }
+            ↓
+         END
+
+
+📁 FILE STRUCTURE & RESPONSIBILITIES
+================================================================================
+
+ROOT
+├─ graph_app.py
+│  └─ Main StateGraph definition with 7 nodes and conditional routing
+│
+├─ soc_state.py
+│  └─ SOCState TypedDict schema (all fields: requests, items, results)
+│
+├─ backends/
+│  ├─ rag_backend.py          ← WHERE RAG DATA LIVES
+│  │  ├─ ChromaDB in-memory collection "soc_attacks"
+│  │  ├─ add_rag_example(text, is_anomalous, attack_type)
+│  │  ├─ vector_search(query) → top-3 similar items
+│  │  └─ rag_list_parser(results) → formatted string for LLM
+│  │
+│  ├─ rule_engine.py          ← OWASP CRS PATTERNS
+│  │  ├─ 15 attack types, 80+ patterns
+│  │  └─ analyze_request(text) → score, severity, attack_type
+│  │
+│  ├─ llm_backend.py          ← GROQ LLM
+│  │  ├─ Requires: $GROQ_API_KEY environment variable
+│  │  └─ llm_analyze(query, rag_context) → LLM verdict
+│  │
+│  ├─ llm_backend_mock.py     ← MOCK LLM (no API key needed)
+│  │  └─ Simple heuristic for testing
+│  │
+│  ├─ cache_backend.py        ← FAST LOOKUP
+│  │  ├─ In-memory SHA256 hash cache
+│  │  └─ Prevents re-analysis of same requests
+│  │
+│  └─ batch_decoder.py        ← INPUT PARSING
+│
+├─ nodes/
+│  ├─ nodes_rule.py           → Apply rule engine, detect attacks
+│  ├─ nodes_router.py         → Route based on rule decision
+│  ├─ nodes_cache.py          → Check cache / Load RAG context ← RAG VECTOR SEARCH HERE
+│  ├─ nodes_llm.py            → Call LLM with RAG context
+│  ├─ nodes_cache_save.py     → Save results to cache
+│  └─ nodes_response.py       → Format final JSON output
+│
+├─ builders/
+│  ├─ response_builder.py     → Rich JSON formatter
+│  └─ audit_logger.py         → Event logging
+│
+├─ scripts/
+│  ├─ seed_rag.py              ← RAG DATASET OPTION 1 (manual, 6 items)
+│  │  └─ Run: python scripts/seed_rag.py
+│  │
+│  ├─ seed_rag_from_csic.py    ← RAG DATASET OPTION 2 (CSIC2010, 61k items)
+│  │  └─ Run: python scripts/seed_rag_from_csic.py
+│  │
+│  ├─ inspect_chromadb.py      ← View what's in RAG
+│  │  └─ Run: python scripts/inspect_chromadb.py
+│  │
+│  └─ seed_and_inspect.py      ← Seed + view in one go
+│     └─ Run: python scripts/seed_and_inspect.py
+│
+├─ tests/
+│  ├─ test_cache_flow.py       ← Test cache hit/miss behavior (4 tests)
+│  └─ test_cache_mock.py       ← Test without API key (mock LLM)
+│
+├─ docs/
+│  ├─ README.md
+│  ├─ FAST_SLOW_PATH_DOCS.md
+│  ├─ RESPONSE_FORMAT_DOC.md
+│  └─ ... (other documentation)
+│
+└─ venv_langgraph/            → Python virtual environment
+
+
+🔑 KEY DECISION POINTS
+================================================================================
+
+Decision 1: DATASET SOURCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ┌─ Small dataset (quick test)?
+  │  └─ Run: python scripts/seed_rag.py
+  │     └─ 6 hard-coded examples loaded instantly
+  │
+  └─ Large dataset (production)?
+     └─ Run: python scripts/seed_rag_from_csic.py
+        └─ Downloads 61,792 real HTTP payloads from Hugging Face
+           └─ Takes ~2-5 minutes first time
+           └─ Better RAG quality: LLM sees real attack patterns
+
+
+Decision 2: REQUEST CLASSIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ┌─ Rule engine says BLOCKED?
+  │  └─ Fast path: Skip LLM, save to cache, return result
+  │     └─ Time: <100ms
+  │
+  └─ Rule engine says NOT BLOCKED?
+     └─ Slow path:
+        ├─ Check cache: Found?
+        │  └─ Restore from cache, skip LLM
+        │
+        └─ Not in cache?
+           ├─ RAG vector search: Find 3 similar historical requests
+           ├─ Pass RAG context to Groq LLM
+           ├─ LLM analyzes with context
+           └─ Save result to cache for next time
+           └─ Time: ~1-2 seconds (depends on Groq API)
+
+
+📈 PERFORMANCE CHARACTERISTICS
+================================================================================
+
+Fast Path (Rule-blocked):
+  Rule check → cache save → response = ~50ms
+  
+Cached Hit (Same request seen before):
+  Cache lookup → skip LLM → response = ~100-200ms
+  
+Cache Miss (New request):
+  RAG search (SentenceTransformer embedding): ~200-300ms
+  LLM call (Groq API):  ~800-1500ms
+  Save to cache: ~10ms
+  Total: ~1-2 seconds
+
+Without RAG (if empty ChromaDB):
+  LLM called with no context
+  LLM might over-analyze or hallucinate
+  RESULT: Lower quality classification
+
+
+✅ QUICK START (RECOMMENDED)
+================================================================================
+
+Step 1: Ensure dependencies
+  cd "e:\DO AN MOI NHAT\LangChain"
+  source venv_langgraph/Scripts/activate
+
+Step 2: Seed RAG (choose one):
+  python scripts/seed_rag.py              # Quick test (6 items)
+         OR
+  python scripts/seed_rag_from_csic.py    # Production (61k items)
+
+Step 3: Verify RAG data
+  python scripts/inspect_chromadb.py
+
+Step 4: Run tests
+  python tests/test_cache_flow.py         # Uses Groq API (needs GROQ_API_KEY)
+         OR
+  python tests/test_cache_mock.py         # Uses mock LLM (no API key needed)
+
+Step 5: Start API server
+  python api.py
+  Then: curl -X POST http://127.0.0.1:8000/analyze -d '{"requests": [...]}'
+
+================================================================================

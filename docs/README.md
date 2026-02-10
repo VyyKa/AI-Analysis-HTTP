@@ -43,6 +43,67 @@ A production-ready security analysis pipeline that combines:
 
 ## Architecture
 
+### System Flow Diagram
+
+```mermaid
+graph TD
+    START([Start]) --> decode[1. Decode<br/>Parse & Normalize Requests]
+    decode --> rule[2. Rule Engine<br/>OWASP CRS Pattern Matching]
+    rule --> router[3. Router<br/>Decision Point]
+    
+    router -->|Fast Path<br/>All Blocked| cache_save_fast[6. Cache Save<br/>Store Result]
+    router -->|Slow Path<br/>Need Analysis| cache[4. Cache Check<br/>+ RAG Context]
+    
+    cache -->|Cache Miss| llm[5. LLM Analysis<br/>Groq + RAG Context]
+    cache -->|Cache Hit| cache_save[6. Cache Save<br/>Store Result]
+    
+    llm --> cache_save
+    cache_save_fast --> response[7. Response Builder<br/>Format JSON]
+    cache_save --> response
+    
+    response --> END([End])
+    
+    style decode fill:#e1f5ff
+    style rule fill:#fff3e0
+    style router fill:#f3e5f5
+    style cache fill:#e8f5e9
+    style llm fill:#fce4ec
+    style cache_save fill:#e8f5e9
+    style cache_save_fast fill:#e8f5e9
+    style response fill:#f1f8e9
+    style START fill:#c8e6c9
+    style END fill:#c8e6c9
+```
+
+### LangGraph Node Flow
+
+```mermaid
+graph TD;
+    __start__([Start]):::first
+    decode(decode)
+    rule(rule)
+    router(router)
+    cache(cache)
+    llm(llm)
+    cache_save(cache_save)
+    response(response)
+    __end__([End]):::last
+    __start__ --> decode;
+    cache --> llm;
+    cache_save --> response;
+    decode --> rule;
+    llm --> cache_save;
+    router -. slow .-> cache;
+    router -. fast .-> cache_save;
+    rule --> router;
+    response --> __end__;
+    classDef default fill:#f2f0ff,line-height:1.2
+    classDef first fill-opacity:0
+    classDef last fill:#bfb6fc
+```
+
+### Text Flow
+
 ```
 Input (batch of HTTP requests)
     ↓
@@ -82,6 +143,55 @@ Output (result_json with 20+ fields)
 └── venv_langgraph/             # Python virtual environment
 ```
 
+## RAG Dataset Setup
+
+The system uses **Retrieval Augmented Generation (RAG)** to provide contextual examples to the LLM.
+
+### Dataset Sources
+
+**Option 1: Quick Test (6 examples)**
+```bash
+python scripts/seed_rag.py
+```
+- 3 anomalous examples (SQL Injection, XSS, Path Traversal)
+- 3 normal examples
+- Instant seeding (<1 second)
+
+**Option 2: Production Quality (61,792 examples)**
+```bash
+pip install datasets
+python scripts/seed_rag_from_csic.py
+```
+- Real HTTP payloads from CSIC2010 dataset
+- From Hugging Face: `nquangit/CSIC2010_dataset_classification`
+- First-time download: ~2-5 minutes
+- Better RAG context quality
+
+### Verify RAG Data
+```bash
+python scripts/seed_and_inspect.py
+```
+
+### How RAG Works
+```mermaid
+graph LR
+    A[New Request] --> B[Cache Miss?]
+    B --> C[Vector Search<br/>ChromaDB]
+    C --> D[Top-3 Similar<br/>Requests]
+    D --> E[Format Context]
+    E --> F[Pass to LLM]
+    F --> G[Analyzed Result]
+    
+    style C fill:#e8f5e9
+    style D fill:#fff3e0
+    style F fill:#fce4ec
+```
+
+**Storage:** ChromaDB in-memory collection `"soc_attacks"`  
+**Embedding:** SentenceTransformer (all-MiniLM-L6-v2, 384D)  
+**Search:** Top-3 semantic similarity  
+**Metadata:** `{label: "normal"/"anomalous", attack_type: "SQL Injection"/"XSS"/...}`
+
 ## Quick Start
 
 ### 1. Clone & Install
@@ -100,13 +210,23 @@ pip install -r requirements.txt
 export GROQ_API_KEY="your-groq-api-key"
 ```
 
-### 3. Run API Server
+### 3. Seed RAG Database (Required)
+
+```bash
+# Quick test (6 examples)
+python scripts/seed_rag.py
+
+# OR production quality (61k examples)
+python scripts/seed_rag_from_csic.py
+```
+
+### 4. Run API Server
 
 ```bash
 python -m uvicorn api:app --host 127.0.0.1 --port 8000
 ```
 
-### 4. Test Endpoint
+### 5. Test Endpoint
 
 ```bash
 curl -X POST http://127.0.0.1:8000/analyze \

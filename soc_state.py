@@ -18,6 +18,7 @@ class SOCItem(TypedDict):
 
     # ===== CACHE / RAG =====
     cache_hit: bool
+    cached_result: Dict[str, Any]
     rag_context: str
 
     # ===== LLM =====

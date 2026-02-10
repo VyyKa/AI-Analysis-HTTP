@@ -1,5 +1,5 @@
 from soc_state import SOCState
-from rule_engine import analyze_request
+from backends.rule_engine import analyze_request
 
 
 def rule_engine_node(state: SOCState) -> SOCState:

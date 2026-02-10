@@ -68,3 +68,8 @@ Thumbs.db
 # Project specific
 Untitled-1.txt
 .groq_*
+
+# Generated files
+artifacts/
+*.png
+*.mmd

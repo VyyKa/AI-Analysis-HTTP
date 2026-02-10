@@ -1,5 +1,5 @@
 from soc_state import SOCState
-from llm_backend import llm_analyze
+from backends.llm_backend import llm_analyze
 
 
 def llm_node(state: SOCState) -> SOCState:

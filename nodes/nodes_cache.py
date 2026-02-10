@@ -1,9 +1,10 @@
 from soc_state import SOCState
-from cache_backend import cache_get
-from rag_backend import vector_search, rag_list_parser
+from backends.cache_backend import cache_get
+from backends.rag_backend import vector_search, rag_list_parser
 
 
 def cache_router_node(state: SOCState) -> SOCState:
+    """Check cache and load RAG context if cache miss"""
     for item in state["items"]:
         # item đã BLOCK thì bỏ qua
         if item["blocked"]:
@@ -12,10 +13,13 @@ def cache_router_node(state: SOCState) -> SOCState:
         query = item["raw_request"]
 
         # 1. Cache check
-        cached = cache_get(query)
-        if cached:
+        cached_result = cache_get(query)
+        if cached_result:
             item["cache_hit"] = True
-            item["final_msg"] = cached
+            item["cached_result"] = cached_result
+            # Copy cached analysis to item
+            item["llm_output"] = cached_result.get("llm_output")
+            item["final_msg"] = cached_result.get("final_msg")
             continue
 
         # 2. Cache MISS → RAG
