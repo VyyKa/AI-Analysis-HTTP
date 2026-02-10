@@ -76,3 +76,6 @@ artifacts/
 
 # ChromaDB persistent storage
 chroma_db/
+
+# Cache persistent storage
+cache_data.pkl

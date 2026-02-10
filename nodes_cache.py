@@ -1,15 +1,6 @@
 """Cache checking and saving nodes"""
 from soc_state import SOCState
-import hashlib
-
-
-def _hash_request(request: str) -> str:
-    """Generate hash for caching request"""
-    return hashlib.md5(request.lower().encode()).hexdigest()
-
-
-# Simple in-memory cache (in production, use Redis/Memcached)
-REQUEST_CACHE = {}
+from backends.cache_backend import cache_get, cache_set
 
 
 def cache_check_node(state: SOCState) -> dict:
@@ -19,19 +10,23 @@ def cache_check_node(state: SOCState) -> dict:
     If not cached, set cache_hit=False and continue to rule engine.
     """
     for item in state.get("items", []):
-        request_hash = _hash_request(item["raw_request"])
+        raw_request = item["raw_request"]
         
-        if request_hash in REQUEST_CACHE:
+        # Check cache using backend
+        cached_data = cache_get(raw_request)
+        
+        if cached_data:
             # Cache HIT - restore cached analysis
-            cached_data = REQUEST_CACHE[request_hash]
             item["cache_hit"] = True
-            item["attack_type"] = cached_data["attack_type"]
-            item["rule_score"] = cached_data["rule_score"]
-            item["severity"] = cached_data["severity"]
-            item["fast_decision"] = cached_data["fast_decision"]
-            item["evidence"] = cached_data["evidence"]
-            item["attack_candidates"] = cached_data["attack_candidates"]
-            item["blocked"] = cached_data["blocked"]
+            item["attack_type"] = cached_data.get("attack_type")
+            item["rule_score"] = cached_data.get("rule_score")
+            item["severity"] = cached_data.get("severity")
+            item["fast_decision"] = cached_data.get("fast_decision")
+            item["evidence"] = cached_data.get("evidence")
+            item["attack_candidates"] = cached_data.get("attack_candidates")
+            item["blocked"] = cached_data.get("blocked")
+            item["final_msg"] = cached_data.get("final_msg")
+            item["llm_output"] = cached_data.get("llm_output")
         else:
             # Cache MISS - mark for analysis
             item["cache_hit"] = False
@@ -45,12 +40,12 @@ def cache_save_node(state: SOCState) -> dict:
     Only cache after full analysis (rule + LLM).
     """
     for item in state.get("items", []):
-        # Skip if already cached
-        request_hash = _hash_request(item["raw_request"])
+        raw_request = item["raw_request"]
         
-        if request_hash not in REQUEST_CACHE:
-            # Save to cache
-            REQUEST_CACHE[request_hash] = {
+        # Check if already exists in cache
+        if not cache_get(raw_request):
+            # Build cache data
+            cache_data = {
                 "attack_type": item.get("attack_type"),
                 "rule_score": item.get("rule_score"),
                 "severity": item.get("severity"),
@@ -58,6 +53,11 @@ def cache_save_node(state: SOCState) -> dict:
                 "evidence": item.get("evidence"),
                 "attack_candidates": item.get("attack_candidates"),
                 "blocked": item.get("blocked"),
+                "final_msg": item.get("final_msg"),
+                "llm_output": item.get("llm_output"),
             }
+            
+            # Save to cache backend
+            cache_set(raw_request, cache_data)
     
     return state

@@ -1,8 +1,29 @@
 import hashlib
+import pickle
 from typing import Dict, Any, Optional
+from pathlib import Path
 
-# cache giả lập (sau này thay bằng Redis / DB)
-_CACHE = {}
+# Persistent cache file
+CACHE_FILE = Path(__file__).parent.parent / "cache_data.pkl"
+
+# Load cache from disk on import
+if CACHE_FILE.exists():
+    try:
+        with open(CACHE_FILE, "rb") as f:
+            _CACHE = pickle.load(f)
+    except Exception:
+        _CACHE = {}
+else:
+    _CACHE = {}
+
+
+def _save_cache():
+    """Save cache to disk"""
+    try:
+        with open(CACHE_FILE, "wb") as f:
+            pickle.dump(_CACHE, f)
+    except Exception as e:
+        print(f"Warning: Failed to save cache: {e}")
 
 
 def _make_key(text: str) -> str:
@@ -19,6 +40,7 @@ def cache_set(text: str, value: Dict[str, Any]) -> None:
     """Save full result object to cache"""
     key = _make_key(text)
     _CACHE[key] = value
+    _save_cache()  # Save to disk after every write
 
 
 def cache_info() -> Dict[str, int]:
