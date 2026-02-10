@@ -1,21 +1,11 @@
 from langgraph.graph import StateGraph, END, START
 from soc_state import SOCState
-
-# Try importing from both possible locations (flat or nested)
-try:
-    from backends.batch_decoder import batch_decoder
-    from nodes.nodes_cache import cache_check_node, cache_save_node
-    from nodes.nodes_rule import rule_engine_node
-    from nodes.nodes_router import router_node
-    from nodes.nodes_llm import llm_node
-    from nodes.nodes_response import response_node
-except ImportError:
-    from batch_decoder import batch_decoder
-    from nodes_cache import cache_check_node, cache_save_node
-    from nodes_rule import rule_engine_node
-    from nodes_router import router_node
-    from nodes_llm import llm_node
-    from nodes_response import response_node
+from backends.batch_decoder import batch_decoder
+from nodes_cache import cache_check_node, cache_save_node
+from nodes.nodes_rule import rule_engine_node
+from nodes.nodes_router import router_node
+from nodes.nodes_llm import llm_node
+from nodes.nodes_response import response_node
 
 graph = StateGraph(SOCState)
 
