@@ -73,3 +73,6 @@ Untitled-1.txt
 artifacts/
 *.png
 *.mmd
+
+# ChromaDB persistent storage
+chroma_db/

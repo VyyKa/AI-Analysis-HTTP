@@ -1,10 +1,13 @@
 import chromadb
 import hashlib
 from sentence_transformers import SentenceTransformer
+from pathlib import Path
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-client = chromadb.Client()
+# Use persistent storage instead of in-memory
+chroma_path = Path(__file__).parent.parent / "chroma_db"
+client = chromadb.PersistentClient(path=str(chroma_path))
 collection = client.get_or_create_collection("soc_attacks")
 
 

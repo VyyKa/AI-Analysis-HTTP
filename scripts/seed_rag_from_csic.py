@@ -33,9 +33,9 @@ def seed_chromadb_from_csic():
     col_label = None
     
     for col in dataset.column_names:
-        if col.lower() in ["request", "http_request", "payload", "text"]:
+        if col.lower() in ["request", "requests", "http_request", "payload", "text"]:
             col_request = col
-        if col.lower() in ["label", "class", "classification", "attack_type"]:
+        if col.lower() in ["label", "labels", "class", "classification", "attack_type"]:
             col_label = col
     
     if not col_request or not col_label:
@@ -53,17 +53,22 @@ def seed_chromadb_from_csic():
         request = row.get(col_request, "")
         label_value = row.get(col_label, "Unknown")
         
-        if request and label_value:
+        if request and label_value is not None:
             try:
-                # Determine if anomalous
-                label_str = str(label_value).lower()
-                is_anomalous = label_str != "normal"
+                # Determine if anomalous (label: 0=normal, 1=attack)
+                if isinstance(label_value, int):
+                    is_anomalous = label_value == 1
+                    attack_type = "attack" if is_anomalous else "normal"
+                else:
+                    label_str = str(label_value).lower()
+                    is_anomalous = label_str not in ["normal", "0"]
+                    attack_type = str(label_value)
                 
                 # Add to RAG
                 add_rag_example(
                     text=str(request),
                     is_anomalous=is_anomalous,
-                    attack_type=str(label_value)
+                    attack_type=attack_type
                 )
                 count += 1
                 
