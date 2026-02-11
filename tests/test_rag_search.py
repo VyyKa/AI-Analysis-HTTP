@@ -1,6 +1,12 @@
 """Test RAG retrieval with a specific request"""
-from backends.rag_backend import vector_search, collection
 import json
+import sys
+from pathlib import Path
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from backends.rag_backend import vector_search, collection
 
 # Check ChromaDB size first
 items = collection.get()

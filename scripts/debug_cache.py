@@ -1,6 +1,12 @@
 """Debug cache operations"""
-from backends.cache_backend import cache_info, cache_get
 import hashlib
+import sys
+from pathlib import Path
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from backends.cache_backend import cache_info, cache_get
 
 # Check cache after test
 print("Cache info:", cache_info())

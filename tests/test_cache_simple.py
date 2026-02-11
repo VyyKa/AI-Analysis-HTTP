@@ -1,4 +1,10 @@
 """Test cache checking directly without full graph import"""
+import sys
+from pathlib import Path
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from nodes_cache import cache_check_node, cache_save_node
 
 # Mock SOCState and items
