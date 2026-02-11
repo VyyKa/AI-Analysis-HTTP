@@ -108,6 +108,7 @@ def response_builder(state: SOCState) -> dict:
             "risk_score": int(rule_score),
             "severity": item["severity"],
             "evidence": item.get("evidence", []),
+            "rag_context": item.get("rag_context", ""),
             "observed_patterns": get_observed_patterns(item),
             "suggested_actions": get_suggested_actions(item.get("fast_decision"), item["blocked"]),
             "route": route,

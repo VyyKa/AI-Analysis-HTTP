@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Seed RAG and immediately inspect ChromaDB contents in same process."""
+"""Seed RAG and immediately inspect Qdrant contents in same process."""
 
 import sys
 from pathlib import Path
@@ -7,10 +7,10 @@ from pathlib import Path
 # Add workspace root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from backends.rag_backend import add_rag_example, collection
+from backends.rag_backend import add_rag_example, client, COLLECTION_NAME
 
 print("\n" + "=" * 80)
-print("SEEDING CHROMADB")
+print("SEEDING QDRANT")
 print("=" * 80)
 
 # Seed data
@@ -30,52 +30,74 @@ for text, is_anomalous, attack_type in examples:
 
 # Immediately inspect in same process
 print("\n" + "=" * 80)
-print("CHROMADB COLLECTION CONTENTS")
+print("QDRANT COLLECTION CONTENTS")
 print("=" * 80 + "\n")
 
-items = collection.get()
+count = client.count(collection_name=COLLECTION_NAME, exact=True)
+total_items = count.count
 
-if not items["ids"]:
+if total_items == 0:
     print("[ERROR] Collection is empty!")
     sys.exit(1)
 
-print("Total items: {}\n".format(len(items['ids'])))
+print("Total items: {}\n".format(total_items))
 
-for i, (doc_id, doc_text, metadata) in enumerate(
-    zip(items["ids"], items["documents"], items.get("metadatas", [])), 1
-):
-    label = metadata.get("label", "N/A")
-    attack_type = metadata.get("attack_type", "N/A")
-    
-    print("Item #{}".format(i))
-    print("  ID (SHA256): {}".format(doc_id))
-    print("  Request Text: {}".format(doc_text))
-    print("  Label: {}".format(label))
-    print("  Attack Type: {}".format(attack_type))
-    print()
+normal_count = 0
+anomalous_count = 0
+attack_types = {}
+emb_dim = "N/A"
 
-# Summary stats
-labels = [m.get("label") for m in items.get("metadatas", [])]
-normal_count = labels.count("normal")
-anomalous_count = labels.count("anomalous")
+next_offset = None
+i = 1
+while True:
+    points, next_offset = client.scroll(
+        collection_name=COLLECTION_NAME,
+        limit=100,
+        with_payload=True,
+        with_vectors=True,
+        offset=next_offset,
+    )
+
+    for point in points:
+        payload = point.payload or {}
+        label = payload.get("label", "N/A")
+        attack_type = payload.get("attack_type", "N/A")
+        doc_text = payload.get("raw_request", "")
+        doc_id = str(point.id)
+
+        print("Item #{}".format(i))
+        print("  ID (SHA256): {}".format(doc_id))
+        print("  Request Text: {}".format(doc_text))
+        print("  Label: {}".format(label))
+        print("  Attack Type: {}".format(attack_type))
+        print()
+
+        if label == "normal":
+            normal_count += 1
+        elif label == "anomalous":
+            anomalous_count += 1
+
+        attack_types[attack_type] = attack_types.get(attack_type, 0) + 1
+
+        if point.vector and emb_dim == "N/A":
+            emb_dim = len(point.vector)
+
+        i += 1
+
+    if not next_offset:
+        break
 
 print("=" * 80)
 print("SUMMARY STATISTICS")
 print("=" * 80)
-print("[OK] Total items stored: {}".format(len(items['ids'])))
+print("[OK] Total items stored: {}".format(total_items))
 print("[OK] Normal requests: {}".format(normal_count))
 print("[OK] Anomalous requests: {}".format(anomalous_count))
-emb_dim = len(items['embeddings'][0]) if items.get('embeddings') else 'N/A'
 print("[OK] Embedding dimensions: {}".format(emb_dim))
 
 # Attack type breakdown
-attack_types = {}
-for m in items.get("metadatas", []):
-    at = m.get("attack_type", "normal")
-    attack_types[at] = attack_types.get(at, 0) + 1
-
 print("\nAttack Type Breakdown:")
 for attack_type, count in attack_types.items():
     print("  - {}: {}".format(attack_type or 'Normal', count))
 
-print("\n[SUCCESS] ChromaDB inspection complete!")
+print("\n[SUCCESS] Qdrant inspection complete!")

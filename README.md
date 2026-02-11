@@ -19,7 +19,7 @@ A production-ready security analysis pipeline that combines:
 - Seamless fallback for pattern misses.
 
 ✅ **RAG-Enhanced Analysis**
-- Uses a persistent ChromaDB vector store for Retrieval-Augmented Generation.
+- Uses a persistent Qdrant vector store for Retrieval-Augmented Generation.
 - Enriches LLM context with similar examples from the `CSIC2010` dataset.
 
 ✅ **Explainable & Rich Output**
@@ -47,7 +47,7 @@ LangChain/
 ├── soc_state.py            # State schema (SOCState, SOCItem)
 ├── nodes_cache.py          # Cache check + save nodes
 ├── backends/               # Backend services (6 files)
-│   ├── rag_backend.py      # ChromaDB + vector search
+│   ├── rag_backend.py      # Qdrant + vector search
 │   ├── rule_engine.py      # OWASP CRS patterns
 │   ├── llm_backend.py      # Groq LLM integration
 │   ├── cache_backend.py    # Persistent file cache
@@ -77,11 +77,16 @@ LangChain/
 
 ## RAG Dataset Setup
 
-The system uses **Retrieval Augmented Generation (RAG)** to provide contextual examples to the LLM. This requires seeding a local ChromaDB vector store from the `nquangit/CSIC2010_dataset_classification` dataset on Hugging Face.
+The system uses **Retrieval Augmented Generation (RAG)** to provide contextual examples to the LLM. This requires seeding a local Qdrant vector store from the `nquangit/CSIC2010_dataset_classification` dataset on Hugging Face.
 
 **Setup Steps:**
 
-1.  **Activate virtual environment:**
+1.  **Start Qdrant (local Docker):**
+  ```bash
+  docker compose up -d
+  ```
+
+2.  **Activate virtual environment:**
     ```bash
     # On Windows:
     venv_langgraph\Scripts\activate
@@ -89,7 +94,7 @@ The system uses **Retrieval Augmented Generation (RAG)** to provide contextual e
     # source venv_langgraph/bin/activate
     ```
 
-2.  **Run the seeding script:**
+3.  **Run the seeding script:**
     ```bash
     # Quick test (6 examples):
     python scripts/seed_rag.py
@@ -97,7 +102,7 @@ The system uses **Retrieval Augmented Generation (RAG)** to provide contextual e
     # Full dataset (61,792 items, ~2-5 min):
     python scripts/seed_rag_from_csic.py
     ```
-    This will populate the local ChromaDB instance in the `chroma_db/` directory.
+    This will populate the local Qdrant collection.
 
 ## Quick Start
 
@@ -119,6 +124,8 @@ pip install -r requirements.txt
 Create a `.env` file in the root directory and add your Groq API key:
 ```
 GROQ_API_KEY="your-groq-api-key"
+QDRANT_URL="http://localhost:6333"
+QDRANT_COLLECTION="soc_attacks"
 ```
 
 ### 3. Seed RAG Database (Required)
@@ -132,7 +139,7 @@ python scripts/seed_rag.py
 python scripts/seed_rag_from_csic.py
 ```
 
-Verify ChromaDB:
+Verify Qdrant:
 ```bash
 python scripts/check_chromadb.py
 ```
@@ -185,7 +192,7 @@ python tests/sanity_check.py
 # Generate LangGraph visualization
 python scripts/visualize_graph.py
 
-# Check ChromaDB contents
+# Check Qdrant contents
 python scripts/inspect_chromadb.py
 
 # Debug cache operations

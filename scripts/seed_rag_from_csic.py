@@ -1,5 +1,5 @@
 """
-Seed ChromaDB from CSIC2010 dataset on Hugging Face
+Seed Qdrant from CSIC2010 dataset on Hugging Face
 Dataset: https://huggingface.co/datasets/nquangit/CSIC2010_dataset_classification
 """
 
@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from datasets import load_dataset
 from backends.rag_backend import add_rag_example
 
-def seed_chromadb_from_csic():
+def seed_qdrant_from_csic():
     print("Loading CSIC2010 dataset from Hugging Face...")
     
     try:
@@ -27,7 +27,7 @@ def seed_chromadb_from_csic():
     if len(dataset) > 0:
         print(f"\nFirst row example:\n{dataset[0]}")
     
-    # Seed ChromaDB (using 'request' and 'label' or 'class' column)
+    # Seed Qdrant (using 'request' and 'label' or 'class' column)
     # Adjust column names based on actual dataset structure
     col_request = None
     col_label = None
@@ -44,7 +44,7 @@ def seed_chromadb_from_csic():
         col_request = input("Enter request column name: ")
         col_label = input("Enter label column name: ")
     
-    print(f"\nSeeding ChromaDB using columns: request='{col_request}', label='{col_label}'")
+    print(f"\nSeeding Qdrant using columns: request='{col_request}', label='{col_label}'")
     
     count = 0
     batch_size = 100
@@ -77,9 +77,9 @@ def seed_chromadb_from_csic():
             except Exception as e:
                 print(f"  Error seeding row {idx}: {e}")
     
-    print(f"\n✅ Successfully seeded {count} examples to ChromaDB")
+    print(f"\n✅ Successfully seeded {count} examples to Qdrant")
     return count
 
 
 if __name__ == "__main__":
-    seed_chromadb_from_csic()
+    seed_qdrant_from_csic()

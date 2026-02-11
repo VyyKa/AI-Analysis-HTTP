@@ -9,7 +9,7 @@
 ## 📊 Project Summary
 
 **Hybrid HTTP Request Analysis System** with Cache-First Architecture
-- Combines OWASP CRS Rule Engine + LLM (Groq) + RAG (ChromaDB)
+- Combines OWASP CRS Rule Engine + LLM (Groq) + RAG (Qdrant)
 - Fast path (~5ms) + Slow path (~500ms) + Cache hit (~instant)
 - Production-ready with persistent storage
 
@@ -27,7 +27,7 @@ LangChain/
 │   └── nodes_cache.py              # Cache check + save nodes
 │
 ├── 📦 BACKENDS/ (6 files)
-│   ├── rag_backend.py              # ChromaDB + vector search + embeddings
+│   ├── rag_backend.py              # Qdrant + vector search + embeddings
 │   ├── rule_engine.py              # OWASP CRS: 15 types, 80+ patterns
 │   ├── llm_backend.py              # Groq API (llama-3.3-70b-versatile)
 │   ├── llm_backend_mock.py         # Mock LLM for testing
@@ -48,9 +48,10 @@ LangChain/
 ├── 🚀 SCRIPTS/ (10 files)
 │   ├── seed_rag.py                 # Load 6 manual examples
 │   ├── seed_rag_from_csic.py       # Load 61k CSIC2010 dataset
-│   ├── inspect_chromadb.py         # View RAG collection contents
-│   ├── check_chromadb.py           # Quick ChromaDB size check
+│   ├── inspect_chromadb.py         # View Qdrant collection contents
+│   ├── check_chromadb.py           # Quick Qdrant size check
 │   ├── seed_and_inspect.py         # Combined seed + inspect
+│   ├── migrate_chroma_to_qdrant.py # Migrate ChromaDB data to Qdrant
 │   ├── debug_cache.py              # Debug cache operations
 │   ├── visualize_graph.py          # Render LangGraph diagram
 │   ├── visualize_graph_simple.py   # Simplified diagram
@@ -82,7 +83,7 @@ LangChain/
 │   └── TEST_SUMMARY.md             # Test results summary
 │
 ├── 💾 DATA & STORAGE
-│   ├── chroma_db/                  # Persistent ChromaDB vector store
+│   ├── qdrant (docker volume)      # Persistent Qdrant vector store
 │   ├── cache_data.pkl              # Persistent file cache
 │   ├── .env                        # GROQ_API_KEY
 │   └── .env.example                # Template
@@ -121,17 +122,17 @@ Request → Decode → Cache Check
 ### 2️⃣ Hybrid Detection
 - **Fast Path**: Rule-based blocking (~5ms)
 - **Slow Path**: LLM analysis with RAG context (~500ms)
-- **RAG Context**: Top-3 similar examples from ChromaDB
+- **RAG Context**: Top-3 similar examples from Qdrant
 
 ### 3️⃣ Persistent Storage
 - **Cache**: `cache_data.pkl` - File-based persistent cache
-- **RAG DB**: `chroma_db/` - Persistent ChromaDB collection
+- **RAG DB**: Qdrant collection (persistent via Docker volume)
 - **Survives restarts**: No need to reseed on every run
 
 ### 4️⃣ Dataset Support
 - **Manual**: 6 hard-coded examples (scripts/seed_rag.py)
 - **CSIC2010**: 61,792 real HTTP payloads from Hugging Face
-- **Storage**: ChromaDB with 384D SentenceTransformer embeddings
+- **Storage**: Qdrant with 384D SentenceTransformer embeddings
 
 ---
 
@@ -231,10 +232,10 @@ python scripts/seed_rag_from_csic.py
 python scripts/inspect_chromadb.py
 
 # Check cache
-python debug_cache.py
+python scripts/debug_cache.py
 
-# Check ChromaDB
-python check_chromadb.py
+# Check Qdrant
+python scripts/check_chromadb.py
 ```
 
 ### 5. Run Tests
@@ -290,7 +291,7 @@ curl -X POST http://127.0.0.1:8000/analyze \
 - **api.py**: FastAPI server with POST /analyze endpoint
 
 ### Backend Services
-- **rag_backend.py**: ChromaDB integration (vector storage, search, embeddings)
+- **rag_backend.py**: Qdrant integration (vector storage, search, embeddings)
 - **rule_engine.py**: OWASP CRS patterns (15 attack types, 80+ regex)
 - **llm_backend.py**: Groq API client with RAG context passing
 - **cache_backend.py**: Persistent pickle-based cache
@@ -306,7 +307,7 @@ curl -X POST http://127.0.0.1:8000/analyze \
 ### Critical Scripts
 - **seed_rag.py**: Load 6 manual examples (instant)
 - **seed_rag_from_csic.py**: Load 61k CSIC2010 dataset (2-5 min)
-- **inspect_chromadb.py**: View RAG collection contents
+- **inspect_chromadb.py**: View Qdrant collection contents
 - **visualize_graph.py**: Generate LangGraph diagram
 
 ---
@@ -328,11 +329,11 @@ def cache_set(text: str, value: dict):
 ### RAG Integration
 ```python
 # backends/rag_backend.py
-# ChromaDB persistent storage: chroma_db/
+# Qdrant persistent storage: docker volume
 collection = client.get_or_create_collection("soc_attacks")
 
 def vector_search(query: str, k: int = 3):
-    # Encode query → search ChromaDB → return top-3
+    # Encode query → search Qdrant → return top-3
     
 def rag_list_parser(results):
     # Format: "[ANOMALOUS] SQL Injection: SELECT..."
@@ -355,6 +356,8 @@ def route_after_rule(state: SOCState) -> str:
 ```bash
 # .env
 GROQ_API_KEY=your-api-key-here
+QDRANT_URL=http://localhost:6333
+QDRANT_COLLECTION=soc_attacks
 ```
 
 ### OWASP Threshold
@@ -401,7 +404,7 @@ CACHE_FILE = "cache_data.pkl"  # Change for different cache file
 5. **demo_fast_slow_paths.py**: Demonstrate routing logic
 
 ### Debug Utilities
-- **check_chromadb.py**: Verify ChromaDB has data
+- **check_chromadb.py**: Verify Qdrant has data
 - **debug_cache.py**: Inspect cache contents
 - **test_cache_simple.py**: Minimal cache test
 
@@ -412,7 +415,7 @@ CACHE_FILE = "cache_data.pkl"  # Change for different cache file
 ```
 langgraph          # State graph orchestration
 groq               # LLM API client
-chromadb           # Vector database
+qdrant-client      # Vector database client
 sentence-transformers  # Embeddings (all-MiniLM-L6-v2)
 fastapi            # API server
 uvicorn            # ASGI server
@@ -424,18 +427,12 @@ datasets           # Hugging Face datasets (for CSIC2010)
 
 ## 🐛 Known Issues & Limitations
 
-1. **ChromaDB In-Memory**: If using in-memory mode, data lost on restart
-   - **Fixed**: Now using persistent client (chroma_db/)
+1. **Qdrant Service**: Requires Qdrant running (Docker or Cloud)
+    - If service is down, RAG search will fail
 
 2. **Cache TTL**: No expiration mechanism yet
    - Persistent cache grows indefinitely
    - Consider adding TTL in future
-
-3. **Duplicate Files**: Some legacy files in root (nodes_cache.py, rule_engine.py)
-   - Should clean up and use backends/nodes/ versions only
-
-4. **README Outdated**: Root README.md not reflecting new structure
-   - This PROJECT_OVERVIEW.md is the current source of truth
 
 ---
 
@@ -474,7 +471,7 @@ datasets           # Hugging Face datasets (for CSIC2010)
 - [ ] Install deps: `pip install -r requirements.txt` (create if missing)
 - [ ] Set GROQ_API_KEY in .env
 - [ ] Seed RAG: `python scripts/seed_rag.py`
-- [ ] Verify: `python check_chromadb.py`
+- [ ] Verify: `python scripts/check_chromadb.py`
 - [ ] Test: `python test_cache_simple.py`
 - [ ] Start API: `python api.py`
 - [ ] Read: docs/FINAL_PROJECT_SUMMARY.txt

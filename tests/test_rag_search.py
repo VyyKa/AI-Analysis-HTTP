@@ -6,14 +6,15 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from backends.rag_backend import vector_search, collection
+from backends.rag_backend import vector_search, client, COLLECTION_NAME
 
-# Check ChromaDB size first
-items = collection.get()
-print(f"ChromaDB total items: {len(items['ids'])}\n")
+# Check Qdrant size first
+count = client.count(collection_name=COLLECTION_NAME, exact=True)
+total = count.count
+print(f"Qdrant total items: {total}\n")
 
-if len(items['ids']) == 0:
-    print("⚠️  ChromaDB is empty - seed dataset first!")
+if total == 0:
+    print("⚠️  Qdrant is empty - seed dataset first!")
     exit(1)
 
 # Test request
