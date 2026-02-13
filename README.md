@@ -5,12 +5,12 @@
 🐳 **Now Available on Docker Hub**: [`hotailienvykha/soc-analysis-capstone:latest`](https://hub.docker.com/r/hotailienvykha/soc-analysis-capstone) (415MB, CPU-only)
 
 A production-ready security analysis pipeline combining:
-- **📦 Ultra-Lightweight**: 415MB CPU-only Docker image (no PyTorch/CUDA)
-- **⚡ Cache-First**: Instant responses (<50ms) for repeated requests
-- **🚀 Fast Path**: Rule-based detection (50-200ms) for obvious attacks
-- **🧠 Slow Path**: LLM analysis (2-5s via Groq) for complex/unknown patterns
-- **🔍 RAG-Enhanced**: Vector search with real-world attack examples
-- **📊 Explainable Output**: Threat scores, evidence, and recommendations
+- **Ultra-Lightweight**: 415MB CPU-only Docker image (no PyTorch/CUDA)
+- **Cache-First**: Instant responses (<50ms) for repeated requests
+- **Fast Path**: Rule-based detection (50-200ms) for obvious attacks
+- **Slow Path**: LLM analysis (2-5s via Groq) for complex/unknown patterns
+- **RAG-Enhanced**: Vector search with real-world attack examples
+- **Explainable Output**: Threat scores, evidence, and recommendations
 
 ## Features
 
@@ -631,3 +631,4 @@ MIT License - See LICENSE file for details
 ---
 
 **Built with** ❤️ using **LangGraph** + **HuggingFace** + **Groq** + **Qdrant**
+
