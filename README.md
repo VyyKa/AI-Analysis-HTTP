@@ -2,6 +2,8 @@
 
 **Lightweight HTTP Request Analysis System** using OWASP CRS Rule Engine + LLM (LangGraph) with Cache-First Architecture and HuggingFace API embeddings.
 
+🐳 **Now Available on Docker Hub**: [`hotailienvykha/soc-analysis-capstone:latest`](https://hub.docker.com/r/hotailienvykha/soc-analysis-capstone) (415MB, CPU-only)
+
 A production-ready security analysis pipeline combining:
 - **📦 Ultra-Lightweight**: 415MB CPU-only Docker image (no PyTorch/CUDA)
 - **⚡ Cache-First**: Instant responses (<50ms) for repeated requests
@@ -12,28 +14,28 @@ A production-ready security analysis pipeline combining:
 
 ## Features
 
-✅ **Cache-First Performance**
+**Cache-First Performance**
 - Persistent file-based caching (`data/cache_data.pkl`)
 - Instant analysis (<50ms) for repeated HTTP requests
 - Reduces redundant API calls to LLM and embedding services
 
-✅ **Hybrid Architecture**
+**Hybrid Architecture**
 - **Fast Path**: Rule engine detects obvious attacks (score ≥ 5) in 50-200ms
 - **Slow Path**: Groq LLM analyzes ambiguous patterns (score < 5) in 2-5s
 - **Router Node**: Intelligent path selection based on threat score
 
-✅ **RAG-Enhanced LLM Analysis**
+**RAG-Enhanced LLM Analysis**
 - HuggingFace API embeddings (384-dimensional vectors)
 - Qdrant vector store for similarity search
 - Contextual examples from CSIC2010 dataset enriches LLM decisions
 
-✅ **Explainable & Rich Output**
+**Explainable & Rich Output**
 - Threat scores (0-100 scale)
 - Detected attack types and evidence
 - Recommended actions (BLOCK/LOG/MONITOR/ALLOW)
 - Educational notes for security learning
 
-✅ **Comprehensive Attack Detection**
+**Comprehensive Attack Detection**
 - SQL Injection, XSS, Command Injection, Path Traversal, LDAP Injection
 - Buffer Overflows, Cross-Site Request Forgery, and more
 - Powered by OWASP Core Rule Set patterns
@@ -198,7 +200,28 @@ The system uses **Retrieval Augmented Generation (RAG)** to provide contextual a
 
 ## Quick Start
 
-### 1. Clone & Install
+### Option A: Docker Hub (Fastest - Recommended)
+
+```bash
+# 1. Pull pre-built image
+docker pull hotailienvykha/soc-analysis-capstone:latest
+
+# 2. Start Qdrant
+docker compose up -d
+
+# 3. Start the app
+docker run -d -p 8000:8000 \
+  -e GROQ_API_KEY=your_groq_key \
+  -e QDRANT_URL=http://localhost:6333 \
+  hotailienvykha/soc-analysis-capstone:latest
+
+# 4. Verify
+curl http://localhost:8000/health
+```
+
+### Option B: Build & Install Locally
+
+#### 1. Clone & Install
 
 ```bash
 git clone https://github.com/VyyKa/AI-Analysis-HTTP.git
@@ -217,7 +240,7 @@ venv_langgraph\Scripts\activate
 pip install -r requirements-hf.txt
 ```
 
-### 2. Set Environment Variables
+#### 2. Set Environment Variables
 
 ```bash
 # Copy example file
@@ -230,7 +253,7 @@ cp .env.example .env
 # QDRANT_COLLECTION=soc_attacks
 ```
 
-### 3. Start Qdrant (Docker)
+#### 3. Start Qdrant (Docker)
 
 ```bash
 docker compose up -d
@@ -242,7 +265,7 @@ curl http://localhost:6333/health
 # Response: {"status":"ok"}
 ```
 
-### 4. Seed RAG Database (Required)
+#### 4. Seed RAG Database (Required)
 
 ```bash
 # Quick test (6 examples):
@@ -253,7 +276,7 @@ python scripts/seed_rag.py
 # - Or run scripts/debug_cache.py for info
 ```
 
-### 5. Run API Server
+#### 5. Run API Server
 
 ```bash
 # Option A: Development
@@ -266,7 +289,7 @@ python -m uvicorn api:app --host 0.0.0.0 --port 8000
 API available at: `http://localhost:8000`
 Interactive docs: `http://localhost:8000/docs`
 
-### 6. Test the API
+#### 6. Test the API
 
 ```bash
 # Test 1: SQL Injection (FAST path - obvious threat)
@@ -316,12 +339,12 @@ All tests pass ✅ (verified with comprehensive test suite)
 python tests/test_all_features.py
 
 # Results:
-# ✅ Module imports
-# ✅ HuggingFace API (384-dim embeddings)
-# ✅ Qdrant search
-# ✅ Cache backend
-# ✅ Rule engine (FAST path)
-# ✅ API integration (FAST + SLOW paths)
+# Module imports
+# HuggingFace API (384-dim embeddings)
+# Qdrant search
+# Cache backend
+# Rule engine (FAST path)
+# API integration (FAST + SLOW paths)
 ```
 
 ### Individual Test Suites
@@ -391,7 +414,28 @@ python scripts/generate_artifacts.py
 
 ## Docker Deployment
 
-### Build & Run (CPU-only with HF API)
+### Quick Start with Docker Hub Image (Recommended)
+
+```bash
+# Pull pre-built image from Docker Hub
+docker pull hotailienvykha/soc-analysis-capstone:latest
+
+# Start with docker-compose
+docker compose -f docker-compose.hf.yml up -d
+
+# Or run directly
+docker run -d -p 8000:8000 \
+  -e GROQ_API_KEY=your_api_key \
+  -e QDRANT_URL=http://localhost:6333 \
+  hotailienvykha/soc-analysis-capstone:latest
+
+# Verify API
+curl http://localhost:8000/health
+```
+
+**Docker Hub Repository**: [hotailienvykha/soc-analysis-capstone](https://hub.docker.com/r/hotailienvykha/soc-analysis-capstone)
+
+### Build Locally
 
 ```bash
 # Build image (415MB)
@@ -406,11 +450,12 @@ curl http://localhost:8000/health
 
 ### Image Variants
 
-| Image | Size | Features | Use Case |
-|-------|------|----------|----------|
-| `Dockerfile.hf` | 415MB | HF API, No PyTorch | Production (recommended) |
-| `docker-compose.yml` | - | Full stack with Qdrant | Local dev/testing |
-| `docker-compose.hf.yml` | - | HF API variant | Cloud deployment |
+| Image | Size | Features | Use Case | Docker Hub |
+|-------|------|----------|----------|-----------|
+| `soc-analysis-capstone` (HF API) | 415MB | CPU-only, No PyTorch | Production (recommended) | ✅ Available |
+| `Dockerfile.hf` | 415MB | HF API, No PyTorch | Build locally | - |
+| `docker-compose.yml` | - | Full stack with Qdrant | Local dev/testing | - |
+| `docker-compose.hf.yml` | - | HF API variant | Cloud deployment | - |
 
 ## Performance Metrics
 
