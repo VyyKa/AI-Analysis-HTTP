@@ -3,8 +3,8 @@ import pickle
 from typing import Dict, Any, Optional
 from pathlib import Path
 
-# Persistent cache file
-CACHE_FILE = Path(__file__).parent.parent / "cache_data.pkl"
+# Persistent cache file (moved to data/ folder)
+CACHE_FILE = Path(__file__).parent.parent / "data" / "cache_data.pkl"
 
 # Load cache from disk on import
 if CACHE_FILE.exists():

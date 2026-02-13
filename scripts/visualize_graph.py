@@ -58,17 +58,30 @@ def main() -> None:
     mermaid = graph.draw_mermaid()
     mermaid_path = out_dir / "langgraph.mmd"
     mermaid_path.write_text(mermaid, encoding="utf-8")
+    print(f"✅ Mermaid source saved: {mermaid_path}")
 
     png_path = out_dir / "langgraph.png"
     try:
+        # Try to render PNG (requires graphviz or internet access to mermaid.ink API)
+        print("Generating PNG visualization...")
         png_bytes = graph.draw_mermaid_png()
+        png_path.write_bytes(png_bytes)
+        print(f"✅ PNG saved: {png_path}")
     except Exception as exc:
-        print("Could not render PNG. Mermaid source saved to:", mermaid_path)
-        print("Error:", exc)
+        print(f"⚠️  PNG generation failed: {exc}")
+        print(f"\n✅ Mermaid source IS saved to: {mermaid_path}")
+        print("\nTo get PNG, you can:")
+        print("  1. Online: https://mermaid.live/ (copy-paste the .mmd file content)")
+        print("  2. CLI: npm install -g @mermaid-js/mermaid-cli")
+        print("         mmdc -i artifacts/langgraph.mmd -o artifacts/langgraph.png")
+        print("  3. Python: pip install 'langgraph[all]' pygraphviz")
         return
 
-    png_path.write_bytes(png_bytes)
-    print("Graph rendered to:", png_path)
+    print("\n✅ Graph visualization complete!")
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":

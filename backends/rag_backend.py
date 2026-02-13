@@ -1,17 +1,37 @@
 import hashlib
 import os
 import uuid
-from sentence_transformers import SentenceTransformer
+import requests
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
 
-model = SentenceTransformer("all-MiniLM-L6-v2")
+# HuggingFace Inference API configuration
+HF_API_URL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "soc_attacks")
 VECTOR_SIZE = 384
 
 client = QdrantClient(url=QDRANT_URL)
+
+
+def _get_embedding(text: str) -> list[float]:
+    """Get embedding from HuggingFace Inference API."""
+    headers = {"Content-Type": "application/json"}
+    if HF_TOKEN:
+        headers["Authorization"] = f"Bearer {HF_TOKEN}"
+    
+    response = requests.post(
+        HF_API_URL,
+        headers=headers,
+        json={"inputs": text}
+    )
+    
+    if response.status_code != 200:
+        raise Exception(f"HF API error: {response.status_code} - {response.text}")
+    
+    return response.json()  # Returns 384-dim vector directly
 
 
 def _ensure_collection() -> None:
@@ -40,7 +60,7 @@ def add_rag_example(text: str, is_anomalous: bool, attack_type: str = None):
         attack_type: Type of attack (e.g., 'SQL Injection', 'XSS'). Can be None for normal requests.
     """
     _ensure_collection()
-    emb = model.encode(text).tolist()
+    emb = _get_embedding(text)
     doc_id = _make_doc_id(text)
     payload = {
         "raw_request": text,
@@ -60,13 +80,13 @@ def add_rag_example(text: str, is_anomalous: bool, attack_type: str = None):
 
 def vector_search(query: str, k: int = 3):
     _ensure_collection()
-    emb = model.encode(query).tolist()
-    hits = client.query_points(
+    emb = _get_embedding(query)
+    hits = client.search(
         collection_name=COLLECTION_NAME,
-        query=emb,
+        query_vector=emb,
         limit=k,
         with_payload=True,
-    ).points
+    )
 
     results = []
     for hit in hits:
