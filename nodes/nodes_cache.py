@@ -1,4 +1,5 @@
 """Cache checking and saving nodes"""
+from datetime import datetime, timezone
 from soc_state import SOCState
 from backends.cache_backend import cache_get, cache_set
 from backends.rag_backend import vector_search, rag_list_parser
@@ -50,8 +51,8 @@ def cache_save_node(state: SOCState) -> dict:
         
         # Check if already exists in cache
         if not cache_get(raw_request):
-            # Build cache data
             cache_data = {
+                "raw_request": raw_request,
                 "attack_type": item.get("attack_type"),
                 "rule_score": item.get("rule_score"),
                 "severity": item.get("severity"),
@@ -61,6 +62,7 @@ def cache_save_node(state: SOCState) -> dict:
                 "blocked": item.get("blocked"),
                 "final_msg": item.get("final_msg"),
                 "llm_output": item.get("llm_output"),
+                "cache_written_at": datetime.now(timezone.utc).isoformat(),
             }
             
             # Save to cache backend

@@ -1,9 +1,13 @@
 import hashlib
 import os
 import uuid
+import warnings
 import requests
+import urllib3
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as qmodels
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # HuggingFace Inference API configuration
 HF_API_URL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
@@ -25,7 +29,8 @@ def _get_embedding(text: str) -> list[float]:
     response = requests.post(
         HF_API_URL,
         headers=headers,
-        json={"inputs": text}
+        json={"inputs": text},
+        verify=False,
     )
     
     if response.status_code != 200:
@@ -81,15 +86,15 @@ def add_rag_example(text: str, is_anomalous: bool, attack_type: str = None):
 def vector_search(query: str, k: int = 3):
     _ensure_collection()
     emb = _get_embedding(query)
-    hits = client.search(
+    response = client.query_points(
         collection_name=COLLECTION_NAME,
-        query_vector=emb,
+        query=emb,
         limit=k,
         with_payload=True,
     )
 
     results = []
-    for hit in hits:
+    for hit in response.points:
         payload = hit.payload or {}
         results.append({
             "raw_request": payload.get("raw_request", ""),

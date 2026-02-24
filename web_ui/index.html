@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOC Flow Tester</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: Inter, Arial, Helvetica, sans-serif;
+      --bg: #0b1220;
+      --bg-soft: #111827;
+      --bg-elevated: #0f172a;
+      --panel: #0b1220;
+      --border: #334155;
+      --border-strong: #475569;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --radius: 12px;
+      --red: #ef4444;
+      --orange: #f97316;
+      --yellow: #eab308;
+      --green: #22c55e;
+      --cyan: #0ea5e9;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px 16px;
+      min-height: 100vh;
+      background: radial-gradient(circle at top right, #172554 0%, var(--bg) 52%);
+      color: var(--text);
+    }
+    .container {
+      max-width: 1060px;
+      margin: 0 auto;
+      background: color-mix(in srgb, var(--bg-soft) 94%, white 6%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0 22px 22px;
+      box-shadow: 0 14px 36px rgba(2, 6, 23, 0.38);
+    }
+    h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: 0.2px; }
+    p  { margin: 0 0 18px; color: var(--text-muted); }
+
+    /* ── Header ─────────────────────────────── */
+    .header {
+      background: linear-gradient(90deg, #1e293b 60%, #2563eb 100%);
+      border-radius: 14px 14px 0 0;
+      padding: 18px 24px 12px;
+      margin: 0 -22px 18px;
+      box-shadow: 0 4px 18px rgba(37,99,235,0.08);
+    }
+    .subtitle { color: var(--text-muted); font-size: 15px; margin-top: 2px; }
+
+    /* ── Tabs ───────────────────────────────── */
+    .tabs {
+      display: flex; gap: 8px; margin-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      background: transparent; padding: 12px 16px; color: var(--text-muted);
+      border: none; border-bottom: 2px solid transparent; cursor: pointer;
+      font-weight: 600; border-radius: 8px 8px 0 0; font-size: 14px;
+    }
+    .tab-btn.active {
+      color: var(--text); border-bottom-color: var(--primary);
+      background: color-mix(in srgb, var(--bg-elevated) 90%, white 10%);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Card / Section ─────────────────────── */
+    .card {
+      background: color-mix(in srgb, var(--bg-elevated) 92%, white 8%);
+      border-radius: 14px; box-shadow: 0 2px 16px rgba(2,6,23,0.10);
+      padding: 28px 22px 22px; margin-bottom: 24px;
+      border: 1.5px solid var(--border-strong);
+      animation: fadeInCard 0.5s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes fadeInCard {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* ── Mode toggle ────────────────────────── */
+    .mode-card {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      background: color-mix(in srgb, var(--bg-elevated) 80%, #2563eb 2%, white 18%);
+      border-radius: 10px; border: 1px solid var(--border);
+      margin-bottom: 18px; padding: 10px 14px;
+    }
+    .mode-card label {
+      display: flex; align-items: center; gap: 6px;
+      padding: 2px 6px; border-radius: 6px; font-size: 14px; cursor: pointer;
+    }
+    .mode-card input[type="radio"] { accent-color: var(--primary); }
+
+    /* ── Inputs ──────────────────────────────── */
+    label { font-size: 14px; color: var(--text); }
+    .input-label { font-size: 15px; font-weight: 600; display: block; margin-bottom: 6px; }
+    textarea, input[type="text"], input[type="number"] {
+      width: 100%; border: 1px solid var(--border-strong); border-radius: 8px;
+      background: var(--panel); color: var(--text); padding: 10px 11px;
+      box-sizing: border-box; margin-top: 6px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      font-family: Consolas, 'Courier New', monospace; font-size: 13px;
+    }
+    input:focus, textarea:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+    }
+    textarea { min-height: 100px; resize: vertical; }
+
+    /* ── Batch rows ──────────────────────────── */
+    .batch-item { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+    .batch-item input { margin-top: 0; }
+    .batch-actions { display: flex; gap: 8px; margin-top: 10px; }
+
+    /* ── Buttons ─────────────────────────────── */
+    button {
+      border: 0; border-radius: 8px; background: var(--primary); color: white;
+      padding: 10px 16px; cursor: pointer; font-weight: 600; font-size: 13px;
+      transition: transform 0.08s ease, background 0.2s ease, opacity 0.2s ease;
+    }
+    button:hover:not(:disabled) { background: var(--primary-hover); }
+    button:active:not(:disabled) { transform: translateY(1px); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .small-btn { background: #334155; padding: 8px 12px; font-size: 13px; }
+    .small-btn:hover:not(:disabled) { background: #475569; }
+    .danger-btn { background: #7f1d1d; }
+    .danger-btn:hover:not(:disabled) { background: #991b1b; }
+    .main-btn {
+      background: linear-gradient(90deg, #2563eb 60%, #7c3aed 100%);
+      font-size: 16px; font-weight: 700; padding: 12px 28px; border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.10);
+      transition: background 0.2s, box-shadow 0.2s, transform 0.08s;
+    }
+    .main-btn:hover:not(:disabled) {
+      background: linear-gradient(90deg, #1d4ed8 60%, #6d28d9 100%);
+      box-shadow: 0 4px 16px rgba(37,99,235,0.18);
+      transform: translateY(-1px) scale(1.03);
+    }
+    .action-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+
+    /* ── Route tag pills ─────────────────────── */
+    .route-tag {
+      min-width: 58px; display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid var(--border-strong); color: #cbd5e1; background: #1e293b;
+      user-select: none; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .route-tag.rule  { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+    .route-tag.llm   { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+    .route-tag.cache  { background: #0f766e; border-color: #0f766e; color: #fff; }
+
+    /* ── Severity badge ──────────────────────── */
+    .sev-badge {
+      display: inline-flex; align-items: center; padding: 3px 10px;
+      border-radius: 999px; font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .sev-critical { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+    .sev-high     { background: #431407; color: #fdba74; border: 1px solid #9a3412; }
+    .sev-medium   { background: #422006; color: #fde047; border: 1px solid #854d0e; }
+    .sev-low      { background: #052e16; color: #86efac; border: 1px solid #166534; }
+    .sev-info     { background: #082f49; color: #7dd3fc; border: 1px solid #0c4a6e; }
+    .sev-safe     { background: #052e16; color: #86efac; border: 1px solid #166534; }
+
+    /* ── Result cards ────────────────────────── */
+    #resultArea { margin-top: 18px; }
+    .result-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+    .result-grid.batch-grid { grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); }
+
+    .result-card {
+      background: var(--panel); border: 1.5px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .result-card:hover { border-color: #475569; transform: translateY(-2px); }
+    .result-card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg-elevated) 80%, white 4%);
+    }
+    .result-card-header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .result-card-title { font-weight: 700; font-size: 15px; }
+    .result-card-body { padding: 16px; }
+
+    /* ── Confidence meter ────────────────────── */
+    .meter-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    }
+    .meter-label { font-size: 12px; color: var(--text-muted); min-width: 80px; }
+    .meter-bar {
+      flex: 1; height: 8px; background: #1e293b; border-radius: 999px; overflow: hidden;
+    }
+    .meter-fill {
+      height: 100%; border-radius: 999px;
+      transition: width 0.6s cubic-bezier(.4,0,.2,1);
+    }
+    .meter-value { font-size: 13px; font-weight: 700; min-width: 42px; text-align: right; }
+
+    /* ── Info rows inside result card ─────────── */
+    .rc-row {
+      display: flex; gap: 8px; padding: 5px 0;
+      font-size: 13px; border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+    }
+    .rc-row:last-child { border-bottom: none; }
+    .rc-key { color: var(--text-dim); font-weight: 600; min-width: 120px; flex-shrink: 0; }
+    .rc-val { color: var(--text); word-break: break-word; }
+
+    /* ── Evidence list ───────────────────────── */
+    .evidence-list {
+      list-style: none; padding: 0; margin: 4px 0 0;
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .evidence-list li {
+      background: #1e293b; border: 1px solid var(--border);
+      padding: 3px 10px; border-radius: 6px; font-size: 12px; color: var(--text-muted);
+    }
+
+    /* ── Actions list ────────────────────────── */
+    .actions-list {
+      list-style: none; padding: 0; margin: 4px 0 0;
+    }
+    .actions-list li {
+      padding: 3px 0; font-size: 12px; color: var(--text-muted);
+    }
+    .actions-list li::before {
+      content: "\2192 "; color: var(--primary);
+    }
+
+    /* ── Explanation box ─────────────────────── */
+    .explanation-box {
+      margin-top: 12px; padding: 10px 14px;
+      background: #0f172a; border: 1px solid var(--border); border-radius: 8px;
+      font-size: 13px; line-height: 1.6; color: #cbd5e1;
+    }
+
+    /* ── Collapsible raw JSON ────────────────── */
+    .raw-toggle {
+      display: block; width: 100%; text-align: left;
+      margin-top: 12px; padding: 8px 12px;
+      background: #1e293b; border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text-muted); cursor: pointer; font-size: 12px;
+    }
+    .raw-toggle:hover { background: #334155; color: var(--text); }
+    .raw-json {
+      display: none; margin-top: 8px; padding: 12px;
+      background: #020617; border: 1px solid var(--border); border-radius: 8px;
+      font-family: Consolas, monospace; font-size: 12px; line-height: 1.5;
+      max-height: 300px; overflow: auto; white-space: pre-wrap; word-break: break-word;
+    }
+    .raw-json.open { display: block; }
+
+    /* ── Loading spinner ─────────────────────── */
+    .loading-area {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 40px 0; gap: 14px;
+    }
+    .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--primary); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text-muted); font-size: 14px; }
+
+    /* ── Hint / misc ─────────────────────────── */
+    .hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+    .api-endpoint {
+      color: #38bdf8; font-family: Consolas, monospace; font-size: 13px;
+      background: #0f172a; padding: 2px 8px; border-radius: 6px; margin-left: 4px;
+    }
+
+    /* ── Cache history cards ──────────────────── */
+    .cache-cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+    .cache-card {
+      border: 1px solid var(--border); border-radius: 8px; background: var(--panel);
+      padding: 12px; font-size: 13px; line-height: 1.5;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+    .cache-card:hover { border-color: #64748b; transform: translateY(-1px); }
+    .cache-card-row { display: flex; margin: 6px 0; word-break: break-all; }
+    .cache-card-label { min-width: 100px; color: var(--text-dim); font-weight: 600; }
+    .cache-card-value { flex: 1; color: #cbd5e1; margin-left: 8px; }
+    .cache-card-value.card-mono { font-family: Consolas, monospace; font-size: 11px; }
+    .cache-card-value.card-time { font-size: 11px; color: var(--text-dim); }
+    .severity-critical { color: #ef4444; font-weight: 600; }
+    .severity-high     { color: #f97316; font-weight: 600; }
+    .severity-medium   { color: #eab308; font-weight: 600; }
+    .severity-low      { color: #84cc16; font-weight: 600; }
+    .severity-info     { color: #0ea5e9; font-weight: 600; }
+    .cache-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .cache-card-btn {
+      flex: 1; padding: 8px 12px; background: #334155;
+      border: 1px solid var(--border-strong); border-radius: 6px;
+      color: var(--text-muted); cursor: pointer; font-size: 12px; transition: all 0.2s;
+    }
+    .cache-card-btn:hover { background: #475569; color: var(--text); }
+
+    .history-toolbar {
+      display: flex; gap: 8px; margin-bottom: 12px; align-items: center; flex-wrap: wrap;
+    }
+    .history-limit {
+      width: 80px; padding: 8px; border: 1px solid var(--border-strong);
+      border-radius: 6px; background: var(--panel); color: var(--text);
+    }
+    .muted-text { color: var(--text-muted); font-size: 12px; }
+
+    /* ── Modal ───────────────────────────────── */
+    .modal {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7); display: none;
+      align-items: center; justify-content: center; z-index: 1000;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: var(--bg-soft); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px;
+      width: min(720px, calc(100vw - 28px)); max-height: 80vh;
+      overflow-y: auto; color: var(--text); position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 12px; right: 12px; background: #334155;
+      border: none; color: #e2e8f0; border-radius: 4px; cursor: pointer;
+      padding: 6px 12px; font-size: 14px;
+    }
+    .modal-close:hover { background: #475569; }
+
+    /* ── Responsive ──────────────────────────── */
+    @media (max-width: 640px) {
+      body { padding: 12px; }
+      .container { padding: 0 10px 10px; }
+      .header { padding: 10px 12px 8px; margin: 0 -10px 14px; }
+      .card { padding: 14px 10px 12px; }
+      .action-row { flex-direction: column; gap: 8px; }
+      .batch-item { flex-direction: column; align-items: stretch; }
+      .route-tag { width: 100%; min-width: 0; }
+      .cache-cards { grid-template-columns: 1fr; }
+      .result-grid.batch-grid { grid-template-columns: 1fr; }
+      .result-card-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header class="header">
+      <h1>SOC Flow Tester</h1>
+      <p class="subtitle">Support for langgraph</p>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="analyzer">Analyzer</button>
+      <button class="tab-btn" data-tab="history">Cache History</button>
+    </nav>
+
+    <main>
+      <!-- ════ ANALYZER TAB ════ -->
+      <section id="analyzerTab" class="tab-content active card">
+        <div class="mode-card">
+          <label><input type="radio" name="mode" value="single" checked /> <span>Single request</span></label>
+          <label><input type="radio" name="mode" value="batch" /> <span>Batch requests</span></label>
+        </div>
+
+        <div id="singleBox" style="margin-bottom:18px;">
+          <label for="singleRequest" class="input-label">HTTP Request</label>
+          <textarea id="singleRequest" rows="4"
+            placeholder="Paste a full HTTP request or just a path/payload&#10;&#10;Example: GET /?id=1 UNION SELECT * FROM users HTTP/1.1&#10;Host: example.com"></textarea>
+          <span id="singleTag" class="route-tag" style="margin-top:8px;">-</span>
+        </div>
+
+        <div id="batchBox" style="display:none; margin-bottom:18px;">
+          <label class="input-label">Batch requests (one per field)</label>
+          <div id="batchList"></div>
+          <div class="batch-actions">
+            <button type="button" id="addRowBtn" class="small-btn">+ Add request</button>
+            <button type="button" id="removeRowBtn" class="small-btn">- Remove last</button>
+          </div>
+          <div class="hint">Each field is an independent request. Empty fields are skipped.</div>
+        </div>
+
+        <div class="action-row">
+          <button id="runBtn" class="main-btn">Run Analysis</button>
+          <button type="button" id="copyResultBtn" class="small-btn">Copy JSON</button>
+        </div>
+        <div class="hint">Endpoint: <span class="api-endpoint">POST /analyze</span></div>
+
+        <div id="resultArea"></div>
+      </section>
+
+      <!-- ════ CACHE HISTORY TAB ════ -->
+      <section id="historyTab" class="tab-content card">
+        <div class="history-toolbar">
+          <input id="historyLimitInput" class="history-limit" type="number" min="1" max="500" value="50" />
+          <span class="muted-text">items</span>
+          <button type="button" id="loadHistoryBtn" class="small-btn">Load history</button>
+          <button type="button" id="clearAllCacheBtn" class="small-btn danger-btn">Clear All Cache</button>
+        </div>
+        <div id="historyContainer" class="muted-text">Press "Load history" to view cached entries.</div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Raw JSON modal -->
+  <div id="rawModal" class="modal">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeRawModal()">Close</button>
+      <h3 style="margin-top:0;">Raw Cache Entry</h3>
+      <pre id="rawContent" style="margin-top:12px;font-size:12px;background:#020617;padding:12px;border-radius:8px;border:1px solid var(--border);overflow:auto;max-height:60vh;white-space:pre-wrap;word-break:break-word;"></pre>
+    </div>
+  </div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DOM references
+// ═══════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const modeRadios  = document.querySelectorAll('input[name="mode"]');
+const singleBox   = $('singleBox');
+const batchBox    = $('batchBox');
+const singleInput = $('singleRequest');
+const singleTag   = $('singleTag');
+const batchList   = $('batchList');
+const runBtn      = $('runBtn');
+const copyBtn     = $('copyResultBtn');
+const resultArea  = $('resultArea');
+const tabBtns     = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+let lastRawResponse = null;
+
+// ═══════════════════════════════════════════════════
+// Tabs
+// ═══════════════════════════════════════════════════
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    tabBtns.forEach(b => b.classList.remove('active'));
+    tabContents.forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    $(tab + 'Tab').classList.add('active');
+  });
+});
+
+// ═══════════════════════════════════════════════════
+// Mode toggle
+// ═══════════════════════════════════════════════════
+function getMode() { return document.querySelector('input[name="mode"]:checked').value; }
+function updateModeUI() {
+  const m = getMode();
+  singleBox.style.display = m === 'single' ? '' : 'none';
+  batchBox.style.display  = m === 'batch'  ? '' : 'none';
+}
+modeRadios.forEach(r => r.addEventListener('change', updateModeUI));
+updateModeUI();
+
+// ═══════════════════════════════════════════════════
+// Batch rows
+// ═══════════════════════════════════════════════════
+function addBatchRow(value = '') {
+  const idx = batchList.querySelectorAll('.batch-request').length + 1;
+  const row = document.createElement('div');
+  row.className = 'batch-item';
+  row.innerHTML = `<input type="text" class="batch-request" placeholder="Request ${idx}" value="${escapeAttr(value)}" />
+    <span class="route-tag">-</span>`;
+  batchList.appendChild(row);
+}
+function removeBatchRow() {
+  const rows = batchList.querySelectorAll('.batch-item');
+  if (rows.length > 1) batchList.removeChild(rows[rows.length - 1]);
+}
+$('addRowBtn').addEventListener('click', () => addBatchRow(''));
+$('removeRowBtn').addEventListener('click', removeBatchRow);
+
+addBatchRow('GET /api/users');
+addBatchRow('\x3cscript\x3ealert(1)\x3c/script\x3e');
+
+// ═══════════════════════════════════════════════════
+// Helpers
+// ═══════════════════════════════════════════════════
+function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function escapeAttr(t) { return String(t).replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+function sevClass(s) {
+  const l = (s || 'info').toLowerCase();
+  if (l === 'critical') return 'sev-critical';
+  if (l === 'high')     return 'sev-high';
+  if (l === 'medium')   return 'sev-medium';
+  if (l === 'low')      return 'sev-low';
+  return 'sev-info';
+}
+
+function meterColor(pct) {
+  if (pct >= 80) return '#ef4444';
+  if (pct >= 60) return '#f97316';
+  if (pct >= 40) return '#eab308';
+  if (pct >= 20) return '#22c55e';
+  return '#0ea5e9';
+}
+
+function detectEngine(r) {
+  if (!r || typeof r !== 'object') return null;
+  if (r.cache_hit) return 'cache';
+  const src = String(r.source || '').toLowerCase();
+  const route = String(r.route || '').toLowerCase();
+  if (src.includes('llm') || route === 'slow' || r.llm_model) return 'llm';
+  if (src.includes('rule') || route === 'fast') return 'rule';
+  return null;
+}
+
+function routeTagHtml(engine) {
+  const cls = engine || '';
+  const label = engine ? engine.toUpperCase() : '-';
+  return `<span class="route-tag ${cls}">${label}</span>`;
+}
+
+function setTag(el, engine) {
+  if (!el) return;
+  el.className = 'route-tag' + (engine ? ' ' + engine : '');
+  el.textContent = engine ? engine.toUpperCase() : '-';
+}
+
+function extractItems(d)   { return d && Array.isArray(d.items) ? d.items : []; }
+function extractResults(d) {
+  if (d?.result_json?.results?.length) return d.result_json.results;
+  if (d?.results?.length) return d.results;
+  if (d?.items?.length) return d.items;
+  return [];
+}
+
+// ═══════════════════════════════════════════════════
+// Build result card HTML
+// ═══════════════════════════════════════════════════
+function buildResultCard(result, item, idx) {
+  const r = { ...result, ...item };
+  const label    = r.label || r.attack_type || 'Unknown';
+  const severity = r.severity || 'Info';
+  const conf     = Math.round((r.confidence || 0) * 100);
+  const score    = r.risk_score ?? r.rule_score ?? 0;
+  const engine   = detectEngine(r);
+  const evidence = r.evidence || [];
+  const actions  = r.suggested_actions || [];
+  const explanation = r.explanation || r.final_msg || '';
+  const rawJson  = JSON.stringify(r, null, 2);
+  const uid = 'rc_' + idx + '_' + Date.now();
+
+  return `
+    <div class="result-card">
+      <div class="result-card-header">
+        <div class="result-card-header-left">
+          <span class="result-card-title">${escapeHtml(label)}</span>
+          <span class="sev-badge ${sevClass(severity)}">${severity}</span>
+          ${routeTagHtml(engine)}
+        </div>
+        <span style="font-size:22px;font-weight:800;color:${meterColor(score * 10)}">${score}</span>
+      </div>
+      <div class="result-card-body">
+        <div class="meter-row">
+          <span class="meter-label">Confidence</span>
+          <div class="meter-bar">
+            <div class="meter-fill" style="width:${conf}%;background:${meterColor(conf)}"></div>
+          </div>
+          <span class="meter-value" style="color:${meterColor(conf)}">${conf}%</span>
+        </div>
+
+        <div class="rc-row">
+          <span class="rc-key">Attack Group</span>
+          <span class="rc-val">${escapeHtml(r.attack_group || r.attack_type || '-')}</span>
+        </div>
+        <div class="rc-row">
+          <span class="rc-key">Event Type</span>
+          <span class="rc-val">${escapeHtml(r.event_type || '-')}</span>
+        </div>
+        <div class="rc-row">
+          <span class="rc-key">Source</span>
+          <span class="rc-val">${escapeHtml(r.source || '-')}</span>
+        </div>
+        ${r.llm_model ? `<div class="rc-row"><span class="rc-key">LLM Model</span><span class="rc-val">${escapeHtml(r.llm_model)}</span></div>` : ''}
+
+        ${evidence.length ? `
+        <div class="rc-row">
+          <span class="rc-key">Evidence</span>
+          <span class="rc-val">
+            <ul class="evidence-list">${evidence.map(e => `<li>${escapeHtml(String(e))}</li>`).join('')}</ul>
+          </span>
+        </div>` : ''}
+
+        ${actions.length ? `
+        <div class="rc-row">
+          <span class="rc-key">Actions</span>
+          <span class="rc-val">
+            <ul class="actions-list">${actions.map(a => `<li>${escapeHtml(a)}</li>`).join('')}</ul>
+          </span>
+        </div>` : ''}
+
+        ${explanation ? `<div class="explanation-box">${escapeHtml(explanation)}</div>` : ''}
+
+        ${r.learning_note ? `<div style="margin-top:8px;font-size:12px;color:var(--text-dim);line-height:1.5;">${escapeHtml(r.learning_note)}</div>` : ''}
+
+        <button class="raw-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.textContent=this.nextElementSibling.classList.contains('open')?'Hide raw JSON':'Show raw JSON'">Show raw JSON</button>
+        <pre class="raw-json">${escapeHtml(rawJson)}</pre>
+      </div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// Run analysis
+// ═══════════════════════════════════════════════════
+async function runFlow() {
+  const mode = getMode();
+  let requests = [];
+
+  if (mode === 'single') {
+    const v = singleInput.value.trim();
+    if (!v) { resultArea.innerHTML = '<p class="muted-text">Please enter a request.</p>'; return; }
+    requests = [v];
+  } else {
+    requests = Array.from(batchList.querySelectorAll('.batch-request'))
+      .map(i => i.value.trim()).filter(Boolean);
+    if (!requests.length) { resultArea.innerHTML = '<p class="muted-text">Please enter at least one request.</p>'; return; }
+  }
+
+  runBtn.disabled = true;
+  setTag(singleTag, null);
+  batchList.querySelectorAll('.route-tag').forEach(t => setTag(t, null));
+
+  resultArea.innerHTML = '<div class="loading-area"><div class="spinner"></div><span class="loading-text">Analyzing...</span></div>';
+
+  const t0 = performance.now();
+
+  try {
+    const res = await fetch('/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requests })
+    });
+    const data = await res.json();
+    lastRawResponse = data;
+    const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+
+    if (!res.ok) {
+      resultArea.innerHTML = `<div class="explanation-box" style="color:var(--red);">API Error: ${escapeHtml(JSON.stringify(data))}</div>`;
+      return;
+    }
+
+    const results = extractResults(data);
+    const items   = extractItems(data);
+
+    if (mode === 'single') {
+      const merged = { ...(results[0] || {}), ...(items[0] || {}) };
+      setTag(singleTag, detectEngine(merged));
+      resultArea.innerHTML =
+        `<div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Completed in ${elapsed}s</div>` +
+        `<div class="result-grid">${buildResultCard(results[0] || {}, items[0] || {}, 0)}</div>`;
+    } else {
+      const filledRows = Array.from(batchList.querySelectorAll('.batch-item'))
+        .filter(r => r.querySelector('.batch-request')?.value.trim());
+      filledRows.forEach((row, i) => {
+        const tag = row.querySelector('.route-tag');
+        const merged = { ...(results[i] || {}), ...(items[i] || {}) };
+        setTag(tag, detectEngine(merged));
+      });
+
+      const cards = requests.map((_, i) => buildResultCard(results[i] || {}, items[i] || {}, i)).join('');
+      resultArea.innerHTML =
+        `<div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Completed in ${elapsed}s &mdash; ${requests.length} request(s)</div>` +
+        `<div class="result-grid batch-grid">${cards}</div>`;
+    }
+  } catch (err) {
+    resultArea.innerHTML = `<div class="explanation-box" style="color:var(--red);">Connection error: ${escapeHtml(err.message)}</div>`;
+  } finally {
+    runBtn.disabled = false;
+  }
+}
+
+runBtn.addEventListener('click', runFlow);
+
+// ═══════════════════════════════════════════════════
+// Copy JSON
+// ═══════════════════════════════════════════════════
+copyBtn.addEventListener('click', async () => {
+  if (!lastRawResponse) return;
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(lastRawResponse, null, 2));
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => { copyBtn.textContent = 'Copy JSON'; }, 1200);
+  } catch { /* fallback */ }
+});
+
+// ═══════════════════════════════════════════════════
+// Cache History
+// ═══════════════════════════════════════════════════
+$('loadHistoryBtn').addEventListener('click', loadCacheHistory);
+$('clearAllCacheBtn').addEventListener('click', clearAllCache);
+
+async function clearAllCache() {
+  if (!confirm('Clear ALL cached analysis results? This cannot be undone.')) return;
+  const btn = $('clearAllCacheBtn');
+  btn.disabled = true;
+  btn.textContent = 'Clearing...';
+  try {
+    const res = await fetch('/cache', { method: 'DELETE' });
+    const data = await res.json();
+    btn.textContent = `Cleared ${data.deleted_count || 0} entries`;
+    $('historyContainer').innerHTML = '<p class="muted-text">Cache is empty.</p>';
+    setTimeout(() => { btn.textContent = 'Clear All Cache'; btn.disabled = false; }, 2000);
+  } catch (err) {
+    btn.textContent = 'Error';
+    alert('Failed: ' + err.message);
+    setTimeout(() => { btn.textContent = 'Clear All Cache'; btn.disabled = false; }, 2000);
+  }
+}
+
+async function loadCacheHistory() {
+  const btn = $('loadHistoryBtn');
+  const container = $('historyContainer');
+  btn.disabled = true;
+  container.innerHTML = '<div class="loading-area"><div class="spinner"></div><span class="loading-text">Loading...</span></div>';
+
+  try {
+    const limit = parseInt($('historyLimitInput').value) || 50;
+    const res = await fetch(`/cache/history?limit=${limit}`);
+    const data = await res.json();
+    if (!res.ok) { container.innerHTML = `<p style="color:var(--red);">Error: ${escapeHtml(JSON.stringify(data))}</p>`; return; }
+
+    const items = data.items || [];
+    if (!items.length) { container.innerHTML = '<p class="muted-text">No cached entries yet.</p>'; return; }
+
+    window._cacheItems = items;
+
+    const toolbar = `<div class="history-toolbar">
+      <button id="exportCsvBtn" class="cache-card-btn" style="max-width:120px;">Export CSV</button>
+      <button id="exportJsonBtn" class="cache-card-btn" style="max-width:120px;">Export JSON</button>
+      <span class="muted-text" style="margin-left:auto;">${data.total} total entries</span>
+    </div>`;
+
+    const cards = items.map(item => {
+      const sev = (item.severity || 'Info').toLowerCase();
+      const timeStr = item.cache_written_at ? new Date(item.cache_written_at).toLocaleString('vi-VN') : 'N/A';
+      return `<div class="cache-card">
+        <div class="cache-card-row"><div class="cache-card-label">Cache Key:</div><div class="cache-card-value card-mono">${escapeHtml((item.cache_key||'').substring(0,20))}...</div></div>
+        <div class="cache-card-row"><div class="cache-card-label">Request:</div><div class="cache-card-value">${escapeHtml((item.raw_request||'').substring(0,100))}</div></div>
+        <div class="cache-card-row"><div class="cache-card-label">Attack Type:</div><div class="cache-card-value">${escapeHtml(item.attack_type||'Unknown')}</div></div>
+        <div class="cache-card-row"><div class="cache-card-label">Severity:</div><div class="cache-card-value severity-${sev}">${item.severity||'Info'}</div></div>
+        <div class="cache-card-row"><div class="cache-card-label">Risk Score:</div><div class="cache-card-value"><strong>${item.rule_score||0}</strong></div></div>
+        <div class="cache-card-row"><div class="cache-card-label">Decision:</div><div class="cache-card-value">${escapeHtml(item.fast_decision||'?')}</div></div>
+        <div class="cache-card-row"><div class="cache-card-label">Blocked:</div><div class="cache-card-value">${item.blocked?'YES':'NO'}</div></div>
+        <div class="cache-card-row"><div class="cache-card-label">Saved At:</div><div class="cache-card-value card-time">${timeStr}</div></div>
+        <div class="cache-card-actions">
+          <button class="cache-card-btn" onclick="openRawModal('${escapeAttr(item.cache_key||'')}')">View Raw</button>
+          <button class="cache-card-btn" onclick="copyCacheReq(this,'${escapeAttr(item.raw_request||'')}')">Copy Request</button>
+          <button class="cache-card-btn" style="color:#ef4444;max-width:90px;" onclick="deleteCacheEntry(this,'${escapeAttr(item.cache_key||'')}')">Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    container.innerHTML = toolbar + `<div class="cache-cards">${cards}</div>`;
+
+    $('exportCsvBtn').onclick = () => exportCache('csv');
+    $('exportJsonBtn').onclick = () => exportCache('json');
+  } catch (err) {
+    container.innerHTML = `<p style="color:var(--red);">Connection error: ${escapeHtml(err.message)}</p>`;
+  } finally { btn.disabled = false; }
+}
+
+function openRawModal(key) {
+  const item = (window._cacheItems || []).find(i => i.cache_key === key);
+  if (!item) return alert('Entry not found');
+  $('rawContent').textContent = JSON.stringify(item, null, 2);
+  $('rawModal').classList.add('active');
+}
+function closeRawModal() { $('rawModal').classList.remove('active'); }
+$('rawModal').addEventListener('click', e => { if (e.target === $('rawModal')) closeRawModal(); });
+
+async function copyCacheReq(btn, req) {
+  try {
+    await navigator.clipboard.writeText(req);
+    const t = btn.textContent; btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = t, 1000);
+  } catch { /* ignore */ }
+}
+
+async function deleteCacheEntry(btn, key) {
+  if (!confirm('Delete this cache entry?')) return;
+  btn.disabled = true; btn.textContent = 'Deleting...';
+  try {
+    const res = await fetch(`/cache/${key}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error();
+    btn.textContent = 'Deleted';
+    btn.closest('.cache-card').style.opacity = '0.3';
+  } catch { btn.textContent = 'Error'; }
+}
+
+function exportCache(fmt) {
+  const items = window._cacheItems || [];
+  if (!items.length) return alert('No data');
+  let blob;
+  if (fmt === 'csv') {
+    const keys = Object.keys(items[0]);
+    const csv = [keys.join(',')].concat(
+      items.map(r => keys.map(k => '"' + String(r[k] ?? '').replace(/"/g, '""') + '"').join(','))
+    ).join('\r\n');
+    blob = new Blob([csv], { type: 'text/csv' });
+  } else {
+    blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `cache_history.${fmt}`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 100);
+}
+</script>
+</body>
+</html>
