@@ -6,19 +6,19 @@
   <title>SOC Flow Tester</title>
   <style>
     :root {
-      color-scheme: light dark;
+      color-scheme: dark;
       font-family: Inter, Arial, Helvetica, sans-serif;
-      --bg: #0b1220;
-      --bg-soft: #111827;
-      --bg-elevated: #0f172a;
-      --panel: #0b1220;
-      --border: #334155;
-      --border-strong: #475569;
-      --text: #e2e8f0;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
+      --bg: #1a2236;
+      --bg-soft: #232b3e;
+      --bg-elevated: #202a3c;
+      --panel: #232b3e;
+      --border: #2e3a59;
+      --border-strong: #3a4666;
+      --text: #e6eaf3;
+      --text-muted: #a3b1c6;
+      --text-dim: #6b7a99;
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
       --radius: 12px;
       --red: #ef4444;
       --orange: #f97316;
@@ -31,7 +31,7 @@
       margin: 0;
       padding: 24px 16px;
       min-height: 100vh;
-      background: radial-gradient(circle at top right, #172554 0%, var(--bg) 52%);
+      background: radial-gradient(circle at top right, #232b3e 0%, var(--bg) 52%);
       color: var(--text);
     }
     .container {
@@ -48,7 +48,7 @@
 
     /* ── Header ─────────────────────────────── */
     .header {
-      background: linear-gradient(90deg, #1e293b 60%, #2563eb 100%);
+      background: linear-gradient(90deg, #1e293b 60%, #22c55e 100%);
       border-radius: 14px 14px 0 0;
       padding: 18px 24px 12px;
       margin: 0 -22px 18px;
@@ -134,14 +134,14 @@
     .danger-btn { background: #7f1d1d; }
     .danger-btn:hover:not(:disabled) { background: #991b1b; }
     .main-btn {
-      background: linear-gradient(90deg, #2563eb 60%, #7c3aed 100%);
+      background: #22c55e;
       font-size: 16px; font-weight: 700; padding: 12px 28px; border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(37,99,235,0.10);
+      box-shadow: 0 2px 8px rgba(34,197,94,0.10);
       transition: background 0.2s, box-shadow 0.2s, transform 0.08s;
     }
     .main-btn:hover:not(:disabled) {
-      background: linear-gradient(90deg, #1d4ed8 60%, #6d28d9 100%);
-      box-shadow: 0 4px 16px rgba(37,99,235,0.18);
+      background: #16a34a;
+      box-shadow: 0 4px 16px rgba(34,197,94,0.18);
       transform: translateY(-1px) scale(1.03);
     }
     .action-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
@@ -352,7 +352,7 @@
   <div class="container">
     <header class="header">
       <h1>SOC Flow Tester</h1>
-      <p class="subtitle">Support for langgraph</p>
+      <p class="subtitle">Support for AI Workflow - CyberRange</p>
     </header>
 
     <nav class="tabs">
@@ -467,9 +467,27 @@ function addBatchRow(value = '') {
   const idx = batchList.querySelectorAll('.batch-request').length + 1;
   const row = document.createElement('div');
   row.className = 'batch-item';
-  row.innerHTML = `<input type="text" class="batch-request" placeholder="Request ${idx}" value="${escapeAttr(value)}" />
-    <span class="route-tag">-</span>`;
+  row.innerHTML = `
+    <input type="text" class="batch-request" placeholder="Request ${idx}" value="${escapeAttr(value)}" />
+    <span class="route-tag">-</span>
+    <button type="button" class="remove-row-btn small-btn" title="Remove this row" style="margin-left:8px;">✕</button>
+  `;
+  // Add event listener for remove button
+  row.querySelector('.remove-row-btn').addEventListener('click', function() {
+    batchList.removeChild(row);
+    updateBatchPlaceholders();
+  });
   batchList.appendChild(row);
+  updateBatchPlaceholders();
+}
+
+// Update placeholders after row removal/addition
+function updateBatchPlaceholders() {
+  const rows = batchList.querySelectorAll('.batch-item');
+  rows.forEach((row, i) => {
+    const input = row.querySelector('.batch-request');
+    if (input) input.placeholder = `Request ${i + 1}`;
+  });
 }
 function removeBatchRow() {
   const rows = batchList.querySelectorAll('.batch-item');

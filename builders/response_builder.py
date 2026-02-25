@@ -47,9 +47,9 @@ def get_observed_patterns(item):
         for candidate in item["attack_candidates"][:3]:
             patterns.append({
                 "pattern_name": candidate["type"],
-                "description": f"Detected {candidate['rule_matches']} rule matches with score {candidate['score']}",
+                "description": f"Detected {candidate.get('rule_matches', 0)} rule matches with score {candidate['score']}",
                 "severity": item["severity"],
-                "rule_matches": candidate["rule_matches"]
+                "rule_matches": candidate.get("rule_matches", 0)
             })
     
     if not patterns and item.get("evidence"):

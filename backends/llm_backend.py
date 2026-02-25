@@ -4,7 +4,9 @@ import httpx
 from dotenv import load_dotenv
 from groq import Groq
 
+
 load_dotenv()
+print("[DEBUG] GROQ_API_KEY:", os.getenv("GROQ_API_KEY"))
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ Rules:
 - Do NOT over-classify.
 """
 
-MODEL = "llama-3.3-70b-versatile"
+MODEL = "llama-3.1-8b-instant"
 
 
 def llm_analyze(query: str, rag_context: str) -> dict:

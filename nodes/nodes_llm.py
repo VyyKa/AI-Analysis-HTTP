@@ -22,4 +22,10 @@ def llm_node(state: SOCState) -> SOCState:
         item["llm_output"] = result
         item["final_msg"] = result["analysis"]
 
+        # Nếu LLM phát hiện malicious, tự động block
+        verdict = result["analysis"].lower()
+        if "malicious request detected" in verdict or "script injection" in verdict or "attack" in verdict:
+            item["blocked"] = True
+            item["fast_decision"] = "BLOCK"
+
     return state

@@ -10,7 +10,7 @@ def rule_engine_node(state: SOCState) -> SOCState:
         item["rule_score"] = r["rule_score"]
         item["severity"] = r["severity"]
         item["fast_decision"] = r["fast_decision"]
-        item["evidence"] = r["evidence"]
+        item["evidence"] = r.get("evidence", [])
         item["attack_candidates"] = r["attack_candidates"]
 
         # Block if decision is BLOCK

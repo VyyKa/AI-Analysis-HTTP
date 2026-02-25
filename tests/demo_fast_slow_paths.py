@@ -1,10 +1,13 @@
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/../'))
 #!/usr/bin/env python3
 """
 Demo: Fast Path (BLOCK) vs Slow Path (REVIEW → LLM)
 Shows exact output structure at each stage
 """
 
-from rule_engine import analyze_request
+from backends.rule_engine import analyze_request
 
 def print_header(title):
     print(f"\n{'=' * 90}")
