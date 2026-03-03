@@ -72,6 +72,7 @@ for i, test in enumerate(test_cases, 1):
             
             print(f"\n📚 LEARNING NOTE:")
             print(f"  {first_result.get('learning_note', 'N/A')[:100]}...")
+            print(f"  recommendation: {first_result.get('recommendation','N/A')}")
             
             if first_result.get('llm_model'):
                 print(f"\n🤖 LLM INFO:")

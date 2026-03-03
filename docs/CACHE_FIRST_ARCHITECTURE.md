@@ -2,10 +2,10 @@
 
 ## Overview
 
-The system now implements a **cache-first approach** as per the improved flow diagram:
+The system now implements a **cache-first approach** with an explicit RAG step so the retrieval context is visible in the flow:
 
 ```
-request → cache_check → {hit → response} | {miss → normalize → rule → router → llm → response}
+request → rag → cache_check → {hit → response} | {miss → normalize → rule → router → llm → response}
 ```
 
 This ensures:
@@ -29,6 +29,92 @@ This ensures:
        ▼
 ┌──────────────────┐
 │  2. Cache Check  │◄─────────┐
+│  cache_check_    │          │ (if cache hit, populate 
+│  node            │          │  analysis fields)
+└──────┬───────────┘
+       │
+       ├─ Cache HIT ────────────────────┐
+       │                                │
+       │                            ┌───▼─────────┐
+       │                            │   Response  │
+       │                            │   response_ │
+       │                            │   node      │
+       │                            └───┬─────────┘
+       │                                │
+       │                            ┌───▼──────┐
+       │                            │  Output  │
+       │                            │  (fast!) │
+       │                            └──────────┘
+       │
+       └─ Cache MISS ───────────────────┐
+       │                                │
+       ▼                                │
+┌──────────────────┐                   │
+│  3. Rule Engine  │                   │
+│  rule_engine_    │ OWASP CRS scoring │
+│  node            │                   │
+└──────┬───────────┘
+       │
+       ▼
+┌──────────────────┐
+│  4. Router       │ Fast (BLOCK?) or Slow (LLM)?
+│  router_node     │
+└──────┬───────────┘
+       │
+       ├─ Fast Path (blocked) ──────────┐
+       │                                │
+       ▼                                │
+┌──────────────────┐                   │
+│  5a. Cache Save  │ Save to cache     │
+│  cache_save_node │                   │
+└──────┬───────────┘                   │
+       │                               │
+       │                               │
+       └──────────────┬────────────────┘
+                      │
+       ┌──────────────┘
+       │
+ ┌─────▼────────────┐
+ │ Slow Path (LLM)? │
+ └─────┬────────────┘
+       │
+       ├─ No (score < threshold) ──────┬──► Cache Save ──┐
+       │                               │                 │
+       │                               │                 │
+       └─ Yes (needs analysis) ────────┤                 │
+                                       │                 │
+       ┌──────────────────────────────┐│                 │
+       │                              ││                 │
+       ▼                              ││                 │
+┌──────────────────┐                  ││                 │
+│  6. RAG Node     │ Vector search for context │              │
+│  rag_node        │ (only slow path)         ││                 │
+└──────┬───────────┘                  ││                 │
+       │                              ││                 │
+       ▼                              ││                 │
+┌──────────────────┐                  ││                 │
+│  7. LLM Node     │ Deep analysis    ││                 │
+│  llm_node        │                  ││                 │
+└──────┬───────────┘                  ││                 │
+       │                              ││                 │
+       └──────────────────┬───────────┘│                 │
+                          │            │                 │
+                          ▼            ▼                 │
+                    ┌──────────────────────────┐         │
+                    │  5b. Cache Save Node     │         │
+                    │  cache_save_node         │◄────────┘
+                    └──────┬───────────────────┘
+                           │
+                           ▼
+                    ┌──────────────────┐
+                    │  8. Response     │
+                    │  response_node   │
+                    └──────┬───────────┘
+                           │
+                           ▼
+                    ┌──────────────────┐
+                    │  Output (JSON)   │
+                    └──────────────────┘
 │  cache_check_    │          │ (if cache hit, populate 
 │  node            │          │  analysis fields)
 └──────┬───────────┘

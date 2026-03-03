@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 from graph_app import soc_app
 from backends.cache_backend import _CACHE, _make_key, _save_cache
@@ -57,11 +57,13 @@ def analyze(payload: dict):
 
 # ── Cache endpoints (for Web UI) ───────────────────
 
+import itertools
+
 @app.get("/cache/history")
 def cache_history(limit: int = Query(default=50, ge=1, le=500)):
     """Return cached analysis entries for the history view."""
     items = []
-    for key, value in list(_CACHE.items())[:limit]:
+    for key, value in itertools.islice(_CACHE.items(), limit):
         entry = {
             "cache_key": key,
             "raw_request": value.get("raw_request", ""),

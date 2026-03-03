@@ -1,6 +1,22 @@
+import os
 import re
+import math
 import urllib.parse
-from typing import Dict, List
+from datetime import datetime
+from typing import Dict, List, Any
+
+# =====================================================
+# SAFE FAST-ALLOW (EXACT MATCH - very narrow)
+# =====================================================
+SAFE_PATTERNS = [
+    r"^hello(\s+world)?$",
+    r"^hi$",
+    r"^test$",
+    r"^ping$",
+]
+
+# ... skip unchanged things until PATTERNS
+# Actually we can't easily multiline skip. Let's just do two replace_file_content, or I can replace the import and PATTERNS separately.
 
 
 # =====================================================
@@ -88,6 +104,8 @@ def is_normal_request(raw: str) -> bool:
     return True
 
 
+import base64
+
 # =====================================================
 # NORMALIZATION (ENHANCED)
 # =====================================================
@@ -111,12 +129,33 @@ def normalize(raw: str) -> Dict[str, str]:
     decoded = re.sub(r"%u([0-9a-fA-F]{4})", decode_u, decoded)
 
     # HTML entities decode (&#x hex and &#decimal)
-    decoded = re.sub(r"&#x([0-9a-fA-F]+);", lambda m: chr(int(m.group(1), 16)), decoded)
-    decoded = re.sub(r"&#(\d+);", lambda m: chr(int(m.group(1))), decoded)
+    decoded = re.sub(r"&#x([0-9a-fA-F]+);?", lambda m: chr(int(m.group(1), 16)), decoded)
+    decoded = re.sub(r"&#(\d+);?", lambda m: chr(int(m.group(1))), decoded)
 
-    # Unicode escape sequences
+    # Unicode & Hex escape sequences (\uXXXX, \xXX, %XX)
     decoded = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), decoded)
     decoded = re.sub(r"\\x([0-9a-fA-F]{2})", lambda m: chr(int(m.group(1), 16)), decoded)
+
+    # Try to find and decode Base64 strings (length >= 16 to avoid false positives on random strings)
+    # This looks for basic base64 patterns (letters, numbers, +, /, = ending)
+    def decode_b64(match):
+        b64_str = match.group(0)
+        try:
+            # Add padding if missing
+            pad_len = 4 - (len(b64_str) % 4)
+            if pad_len != 4:
+                b64_str += "=" * pad_len
+            dec = base64.b64decode(b64_str).decode('utf-8', errors='ignore')
+            # Only return the decoded string if it looks like it contains readable characters or typical attack payloads
+            if len(dec) > 5 and re.search(r'[a-zA-Z0-9<>{}\[\]=;\|]', dec):
+                return dec + " " + match.group(0) # Keep both decoded and original for pattern matching
+        except Exception:
+            pass
+        return match.group(0)
+    
+    # Extract parameter values or standalone base64 looking strings
+    # Match words that are at least 16 chars long consisting of base64 chars
+    decoded = re.sub(r"\b([A-Za-z0-9+/]{16,}={0,2})\b", decode_b64, decoded)
 
     lower = decoded.lower()
 
@@ -143,7 +182,7 @@ def normalize(raw: str) -> Dict[str, str]:
 # =====================================================
 # SCORING SYSTEM (OWASP CRS ANOMALY SCORING)
 # =====================================================
-SEVERITY_SCORES = {
+SEVERITY_SCORES: Dict[str, int] = {
     "CRITICAL": 5,
     "ERROR": 4,
     "WARNING": 3,
@@ -749,22 +788,22 @@ def analyze_request(raw: str) -> dict:
     candidates = []
 
     for attack_type, config in PATTERNS.items():
-        attack_score = 0
-        attack_matches = []
+        attack_score: int = 0
+        attack_matches: List[Dict[str, Any]] = []
 
         if "patterns" in config:
             for pattern_obj in config["patterns"]:
-                regex = pattern_obj["regex"]
+                regex = str(pattern_obj["regex"])
                 severity = pattern_obj["severity"]
                 severity_score = SEVERITY_SCORES[severity]
 
                 rxc = re.compile(regex, re.I | re.S)
 
                 if rxc.search(lower) or rxc.search(cleaned) or rxc.search(decoded):
-                    attack_score += severity_score
-                    inbound_anomaly_score += severity_score
+                    attack_score = attack_score + severity_score  # type: ignore
+                    inbound_anomaly_score = inbound_anomaly_score + severity_score  # type: ignore
                     attack_matches.append({
-                        "regex": regex[:60],
+                        "regex": str(regex)[0:60],  # type: ignore
                         "severity": severity,
                         "score": severity_score
                     })

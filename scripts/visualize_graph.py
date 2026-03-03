@@ -22,6 +22,7 @@ def build_graph():
     graph.add_node("cache_check", dummy_node)
     graph.add_node("rule_engine", dummy_node)
     graph.add_node("router", dummy_node)
+    graph.add_node("rag", dummy_node)           # explicit RAG step (slow path only)
     graph.add_node("save_cache", dummy_node)
     graph.add_node("llm_analyze", dummy_node)
     graph.add_node("build_response", dummy_node)
@@ -29,6 +30,7 @@ def build_graph():
     # Add edges for cache_first architecture
     graph.add_edge(START, "decode")
     graph.add_edge("decode", "cache_check")
+    # slow path will later connect router -> rag -> llm
     graph.add_conditional_edges(
         "cache_check",
         lambda x: "response" if x.get("cache_hit") else "rule_engine",
@@ -38,8 +40,9 @@ def build_graph():
     graph.add_conditional_edges(
         "router",
         lambda x: x.get("route", "llm_analyze"),
-        {"fast": "save_cache", "slow": "llm_analyze"}
+        {"fast": "save_cache", "slow": "rag"}
     )
+    graph.add_edge("rag", "llm_analyze")
     graph.add_edge("llm_analyze", "save_cache")
     graph.add_edge("save_cache", "build_response")
     graph.add_edge("build_response", END)

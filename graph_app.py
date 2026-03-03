@@ -1,6 +1,7 @@
 from langgraph.graph import StateGraph, END, START
 from soc_state import SOCState
 from backends.batch_decoder import batch_decoder
+from nodes.nodes_rag import rag_node
 from nodes.nodes_cache import cache_check_node, cache_save_node
 from nodes.nodes_rule import rule_engine_node
 from nodes.nodes_router import router_node
@@ -11,7 +12,8 @@ graph = StateGraph(SOCState)
 
 # Nodes
 graph.add_node("decode", lambda data: batch_decoder(data.get("requests", [])))
-graph.add_node("cache", cache_check_node)        # Early cache check
+graph.add_node("rag", rag_node)                # Compute retrieval context (RAG)
+graph.add_node("cache", cache_check_node)     # Early cache check (now after rag)
 graph.add_node("rule", rule_engine_node)
 graph.add_node("router", router_node)
 graph.add_node("llm", llm_node)
@@ -31,7 +33,7 @@ def route_after_rule(state: SOCState) -> str:
         return "fast"
     return "slow"
 
-# Flow: decode → cache_check → {hit: response} | {miss: rule → router → {fast|slow}}
+# Flow: decode → cache_check → {hit: response} | {miss: rule → router → {fast|slow → rag → llm}}
 graph.set_entry_point("decode")
 graph.add_edge("decode", "cache")
 
@@ -50,10 +52,12 @@ graph.add_conditional_edges(
     route_after_rule,
     {
         "fast": "cache_save",            # Blocked, save & response
-        "slow": "llm",                   # Needs LLM analysis
+        "slow": "rag",                   # Slow path should fetch RAG
     },
 )
 
+# slow path connects rag → llm → cache_save
+graph.add_edge("rag", "llm")
 graph.add_edge("llm", "cache_save")
 graph.add_edge("cache_save", "response")
 graph.add_edge("response", END)

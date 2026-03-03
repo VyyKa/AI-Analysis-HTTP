@@ -10,16 +10,13 @@ def cache_check_node(state: SOCState) -> dict:
     Check if request results are already cached.
     If cached, populate cache_hit=True and copy cached analysis.
     If not cached, set cache_hit=False and continue to rule engine.
-    Always populate RAG context from vector search.
+    RAG context is no longer handled here; it should be computed in a
+    dedicated rag node earlier in the graph.
     """
     for item in state.get("items", []):
         raw_request = item["raw_request"]
         
-        # Always load RAG context - it's not cached, it's fresh vector search results
-        search_results = vector_search(raw_request)
-        item["rag_context"] = rag_list_parser(search_results)
-        
-        # Check cache using backend
+        # Cache lookup only – rag_context is expected to exist already
         cached_data = cache_get(raw_request)
         
         if cached_data:

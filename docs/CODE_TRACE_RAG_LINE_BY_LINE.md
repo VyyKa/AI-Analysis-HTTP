@@ -188,21 +188,50 @@ Step 4: Format RAG Context for LLM
 💬 RAG CONTEXT PASSED TO LLM
 ================================================================================
 
-Step 1: Cache Node Sets item["rag_context"]
+Step 1: Router decides slow path, then RAG node runs
 ┌─────────────────────────────────────────────────────────────────────────┐
-│ File: nodes/nodes_cache.py (line 20)                                   │
+│ File: nodes/nodes_rag.py (new)                                         │
 ├─────────────────────────────────────────────────────────────────────────┤
 │                                                                         │
-│ item["rag_context"] = rag_context  ← Set in state                     │
+│ After rule_engine & router have finalized ``blocked``/``fast_decision``,│
+│ only items routed to the slow path will be fed into rag_node.          │
+│                                                                         │
+│ item["rag_context"] = rag_list_parser(search_results)  ← Set in state │
+│                                                                         │
+│ (vector search executed only when LLM analysis is anticipated)         │
 │                                                                         │
 │ State now has:                                                         │
 │ item = {                                                               │
-│   "raw_request": "/api/data?search=test",                            │
+│   "raw_request": "/api/data?search=test",                           │
 │   "rule_score": 0,                                                    │
 │   "blocked": False,                                                   │
-│   "cache_hit": False,                                                 │
+│   "route": "slow",                                                  │
 │   "rag_context": "[ANOMALOUS] SQL Injection: SELECT...\n[NORMAL]...", │
 │ }                                                                       │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+Step 2: Cache Node Reads (but no longer sets) ``rag_context``
+┌─────────────────────────────────────────────────────────────────────────┐
+│ File: nodes/nodes_cache.py                                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│ # Cache lookup only – rag_context is expected to exist already          │
+│                                                                         │
+│ State continues: already contains rag_context from previous node        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+
+Step 2: Cache Node Reads (but no longer sets) ``rag_context``
+┌─────────────────────────────────────────────────────────────────────────┐
+│ File: nodes/nodes_cache.py                                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│ # Cache lookup only – rag_context is expected to exist already          │
+│                                                                         │
+│ State continues: already contains rag_context from previous node        │
 │                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 

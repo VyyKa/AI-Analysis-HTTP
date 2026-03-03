@@ -4,6 +4,17 @@
 
 🐳 **Now Available on Docker Hub**: [`hotailienvykha/soc-analysis-capstone:latest`](https://hub.docker.com/r/hotailienvykha/soc-analysis-capstone) (415MB, CPU-only)
 
+> **Quick start with Docker**
+> ```sh
+> # pull the image from Docker Hub (if you don't already have it)
+> docker pull hotailienvykha/soc-analysis-capstone:latest
+>
+> # run a container and map port 8000
+> docker run --rm -p 8000:8000 hotailienvykha/soc-analysis-capstone:latest
+> ```
+> Once the container is running, open **http://localhost:8000** in your browser to use the integrated web UI.
+> The UI and API are served on the same port; no extra steps are required.
+
 A production-ready security analysis pipeline combining:
 - **Ultra-Lightweight**: 415MB CPU-only Docker image (no PyTorch/CUDA)
 - **Cache-First**: Instant responses (<50ms) for repeated requests

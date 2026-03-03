@@ -20,12 +20,30 @@ def llm_node(state: SOCState) -> SOCState:
         )
 
         item["llm_output"] = result
-        item["final_msg"] = result["analysis"]
-
-        # Nếu LLM phát hiện malicious, tự động block
-        verdict = result["analysis"].lower()
-        if "malicious request detected" in verdict or "script injection" in verdict or "attack" in verdict:
-            item["blocked"] = True
-            item["fast_decision"] = "BLOCK"
+        
+        # Extract fields from the new JSON format
+        analysis_data = result.get("analysis", {})
+        
+        if isinstance(analysis_data, dict):
+            threat_score = analysis_data.get("threat_score", 0)
+            attack_type = analysis_data.get("attack_type", "Unknown")
+            justification = analysis_data.get("justification", "")
+            action = analysis_data.get("action", "REVIEW").upper()
+            
+            # Update item properties based on LLM profound analysis
+            item["attack_type"] = attack_type
+            item["final_msg"] = f"[LLM] {justification} (Score: {threat_score}, Action: {action})"
+            
+            # Phá lệ, nếu Action là BLOCK, hoặc Điểm >= 6 thì Block
+            if action == "BLOCK" or (isinstance(threat_score, (int, float)) and threat_score >= 6):
+                item["blocked"] = True
+                item["fast_decision"] = "BLOCK"
+        else:
+            # Fallback if something went wrong and it's still a string
+            item["final_msg"] = str(analysis_data)
+            verdict = str(analysis_data).lower()
+            if "malicious" in verdict or "attack" in verdict:
+                item["blocked"] = True
+                item["fast_decision"] = "BLOCK"
 
     return state

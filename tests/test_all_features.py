@@ -27,6 +27,12 @@ try:
     from nodes.nodes_cache import cache_check_node
     from nodes.nodes_llm import llm_node
     from nodes.nodes_rule import rule_engine_node
+    from nodes.nodes_rag import rag_node
+    # quick sanity call to ensure rag_node exists; ignore backend errors
+    try:
+        _ = rag_node({"items": [{"raw_request": "test"}]})
+    except Exception as _e:
+        print(f"   ⚠️  rag_node invocation failed (ignored): {_e}")
     print("   ✅ All imports successful")
 except Exception as e:
     print(f"   ❌ Import failed: {e}")
@@ -172,9 +178,16 @@ for name, payload in slow_tests:
             if result.get('items'):
                 item = result['items'][0]
                 if item.get('fast_decision') == 'REVIEW':
-                    slow_passed += 1
-                    decision = "BLOCKED" if item.get('blocked') else "ALLOWED"
-                    print(f"      ✅ {name}: REVIEW → LLM → {decision}")
+                    # ensure rag_context exists (may be empty if collection empty)
+                    if 'rag_context' not in item:
+                        print(f"      ❌ {name}: missing rag_context in slow path")
+                    else:
+                        # recommendation should also be present
+                        if 'recommendation' not in item:
+                            print(f"      ⚠️  {name}: no recommendation field")
+                        slow_passed += 1
+                        decision = "BLOCKED" if item.get('blocked') else "ALLOWED"
+                        print(f"      ✅ {name}: REVIEW → LLM → {decision} (rag_context length={len(item.get('rag_context',''))})")
                 else:
                     print(f"      ⚠️  {name}: Went to FAST path")
         else:

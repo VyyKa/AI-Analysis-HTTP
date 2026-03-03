@@ -1,20 +1,22 @@
 import hashlib
 import pickle
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, cast
 from pathlib import Path
 
 # Persistent cache file (moved to data/ folder)
 CACHE_FILE = Path(__file__).parent.parent / "data" / "cache_data.pkl"
 
+_CACHE: Dict[str, Any] = {}
+
 # Load cache from disk on import
 if CACHE_FILE.exists():
     try:
         with open(CACHE_FILE, "rb") as f:
-            _CACHE = pickle.load(f)
+            data = pickle.load(f)
+            if isinstance(data, dict):
+                _CACHE = cast(Dict[str, Any], data)
     except Exception:
-        _CACHE = {}
-else:
-    _CACHE = {}
+        pass
 
 
 def _save_cache():

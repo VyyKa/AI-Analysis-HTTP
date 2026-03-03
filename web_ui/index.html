@@ -620,6 +620,7 @@ function buildResultCard(result, item, idx) {
         ${explanation ? `<div class="explanation-box">${escapeHtml(explanation)}</div>` : ''}
 
         ${r.learning_note ? `<div style="margin-top:8px;font-size:12px;color:var(--text-dim);line-height:1.5;">${escapeHtml(r.learning_note)}</div>` : ''}
+        ${r.recommendation ? `<div style="margin-top:4px;font-size:12px;color:var(--text-dim);line-height:1.5;"><strong>Recommendation:</strong> ${escapeHtml(r.recommendation)}</div>` : ''}
 
         <button class="raw-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.textContent=this.nextElementSibling.classList.contains('open')?'Hide raw JSON':'Show raw JSON'">Show raw JSON</button>
         <pre class="raw-json">${escapeHtml(rawJson)}</pre>

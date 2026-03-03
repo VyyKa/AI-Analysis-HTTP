@@ -39,6 +39,37 @@ def get_learning_note(attack_type, severity):
     }
     return notes.get(attack_type, "Review request context and user behavior to assess risk.")
 
+
+def get_recommendation(attack_type):
+    """Return a short preventive recommendation for the given attack type."""
+    # Normalize attack_type to a consistent key for lookup
+    normalized_attack_type = attack_type.replace(" ", "_").lower()
+
+    recs = {
+        "LFI": "Disallow dynamic includes based on user input and validate paths against a whitelist.",
+        "XXE": "Disable XXE processing in XML parsers; validate and sanitize XML inputs.",
+        "IDOR": "Implement proper authorization checks for all object references.",
+        "Broken Auth": "Enforce strong password policies, multi-factor authentication, and secure session management.",
+        "Sec Misconfig": "Regularly audit and harden system configurations; follow security best practices.",
+        "Sensitive Data Exp": "Encrypt sensitive data at rest and in transit; implement strong access controls.",
+        "Broken Access Control": "Implement least privilege principle; enforce robust access control mechanisms.",
+        "SSTI": "Sanitize user input before rendering templates; use sandboxed template engines.",
+        "Insufficient Logging": "Implement comprehensive logging, monitoring, and alerting for security events.",
+        "Deserialization": "Avoid deserializing untrusted data; use secure serialization formats.",
+        "SQL Injection": "Use parameterized queries or prepared statements to prevent SQL injection.",
+        "Cross-Site Scripting": "Implement proper output encoding and a strong Content Security Policy (CSP).",
+        "Command Injection": "Avoid executing OS commands with user-supplied input; use safer alternatives.",
+        "Directory Traversal": "Validate and sanitize all file path inputs; use a whitelist of allowed paths.",
+        "Local File Inclusion": "Disable dynamic file includes; validate and restrict file access to trusted sources.",
+        "Server-Side Request Forgery": "Validate URLs, restrict outbound requests, and use a whitelist for allowed domains.",
+        "Log Injection": "Sanitize all user-supplied input before logging to prevent log forging.",
+    }
+    # Normalize attack_type to match dictionary keys if necessary, though current keys are already capitalized.
+    # For robustness, we can ensure consistent casing or handle variations.
+    # Given the existing keys are title-cased, we'll assume attack_type comes in that format.
+    # If attack_type could be lowercased or different, a mapping or .title()/.capitalize() might be needed.
+    return recs.get(attack_type, "Consult security best practices for the specific attack type or general web application security.")
+
 def get_observed_patterns(item):
     """Extract observed patterns from evidence"""
     patterns = []
@@ -115,7 +146,6 @@ def response_builder(state: SOCState) -> dict:
             "event_type": event_type,
             "source": source,
             "explanation": item["final_msg"] or f"Request analyzed with {source}",
-            "learning_note": get_learning_note(attack_type, item["severity"]),
             "hallucination_suspected": False,
             "hallucination_reasons": [],
             "generated_at": datetime.now(timezone.utc).isoformat()

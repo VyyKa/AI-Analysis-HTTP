@@ -57,6 +57,7 @@ This document describes the enhanced response format for the LangChain SOC Analy
 |-------|------|-------------|
 | `explanation` | string | Human-readable analysis result |
 | `learning_note` | string | Security education note |
+| `recommendation` | string | Preventive recommendation / mitigation suggestion |
 
 #### Quality Control
 | Field | Type | Description |
@@ -241,6 +242,7 @@ else:  # ALLOW
 - **Key Functions**:
   - `get_suggested_actions()`: Action recommendations
   - `get_learning_note()`: Security education content
+  - `get_recommendation()`: Preventive advice based on attack type
   - `get_observed_patterns()`: Pattern extraction from evidence
   - `response_builder()`: Main transformation function
 

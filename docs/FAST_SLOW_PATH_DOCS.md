@@ -282,7 +282,7 @@ User Request
 | Rule Node | `nodes_rule.py` | Call rule_engine, set fast_decision |
 | Router Node | `nodes_router.py` | Route BLOCK vs REVIEW/MONITOR |
 | Cache Node | `nodes_cache.py` | Check previous decisions |
-| RAG Node | `rag_backend.py` | Get security context |
+| RAG Node | `nodes/nodes_rag.py` | Execute vector search when slow path |
 | LLM Node | `nodes_llm.py` | AI analysis for REVIEW cases |
 | Response Builder | `response_builder.py` | Final API output |
 | State | `soc_state.py` | Data structure through pipeline |
