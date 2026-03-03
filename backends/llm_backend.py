@@ -41,7 +41,7 @@ MODEL = "llama-3.1-8b-instant"
 
 def llm_analyze(query: str, rag_context: str) -> dict:
     """
-    Run Groq LLM analysis.
+    Run Groq LLM analysis for a single query.
     Called ONLY when request is NOT blocked by rule engine and cache MISS.
     Falls back to a safe default if the API is unreachable.
     """

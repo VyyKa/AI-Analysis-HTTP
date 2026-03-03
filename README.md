@@ -4,13 +4,19 @@
 
 🐳 **Now Available on Docker Hub**: [`hotailienvykha/soc-analysis-capstone:latest`](https://hub.docker.com/r/hotailienvykha/soc-analysis-capstone) (415MB, CPU-only)
 
+> **New release tag**: `v3.0` is built from the current codebase and pushed alongside `latest`.
+>
 > **Quick start with Docker**
 > ```sh
 > # pull the image from Docker Hub (if you don't already have it)
 > docker pull hotailienvykha/soc-analysis-capstone:latest
+> # or use the new release tag
+> docker pull hotailienvykha/soc-analysis-capstone:v3.0
 >
 > # run a container and map port 8000
 > docker run --rm -p 8000:8000 hotailienvykha/soc-analysis-capstone:latest
+> # or test the v3.0 build
+> docker run --rm -p 8000:8000 hotailienvykha/soc-analysis-capstone:v3.0
 > ```
 > Once the container is running, open **http://localhost:8000** in your browser to use the integrated web UI.
 > The UI and API are served on the same port; no extra steps are required.
@@ -214,8 +220,10 @@ The system uses **Retrieval Augmented Generation (RAG)** to provide contextual a
 ### Option A: Docker Hub (Fastest - Recommended)
 
 ```bash
-# 1. Pull pre-built image
+# 1. Pull pre-built image (choose tag)
 docker pull hotailienvykha/soc-analysis-capstone:latest
+# or use the new release tag
+# docker pull hotailienvykha/soc-analysis-capstone:v3.0
 
 # 2. Start Qdrant
 docker compose up -d
@@ -428,8 +436,9 @@ python scripts/generate_artifacts.py
 ### Quick Start with Docker Hub Image (Recommended)
 
 ```bash
-# Pull pre-built image from Docker Hub
+# Pull pre-built image from Docker Hub (or specify v3.0)
 docker pull hotailienvykha/soc-analysis-capstone:latest
+# docker pull hotailienvykha/soc-analysis-capstone:v3.0
 
 # Start with docker-compose
 docker compose -f docker-compose.hf.yml up -d
@@ -444,7 +453,7 @@ docker run -d -p 8000:8000 \
 curl http://localhost:8000/health
 ```
 
-**Docker Hub Repository**: [hotailienvykha/soc-analysis-capstone](https://hub.docker.com/r/hotailienvykha/soc-analysis-capstone)
+**Docker Hub Repository**: [hotailienvykha/soc-analysis-capstone](https://hub.docker.com/r/hotailienvykha/soc-analysis-capstone) – new tag `v3.0` corresponds to the current code in this repo
 
 ### Build Locally
 
