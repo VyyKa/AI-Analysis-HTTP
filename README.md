@@ -99,7 +99,7 @@ AI-Analysis-HTTP/
 ├── api.py                    # FastAPI 8000 /analyze endpoint
 ├── graph_app.py              # Main 8-node LangGraph pipeline
 ├── soc_state.py              # Pydantic state schema
-├── 
+│
 ├── backends/                 # Core backend services
 │   ├── rag_backend.py        # HuggingFace + Qdrant vector search
 │   ├── rule_engine.py        # OWASP CRS pattern matching
@@ -124,21 +124,21 @@ AI-Analysis-HTTP/
 │   ├── audit_logger.py       # Log analysis results
 │   └── __init__.py
 │
-├── scripts/                  # Utility scripts (7 files)
+├── scripts/                  # Utility scripts
 │   ├── visualize_graph.py    # Generate LangGraph PNG/Mermaid
 │   ├── seed_rag.py           # Quick test seed (6 examples)
 │   ├── seed_rag_from_csic.py # Full dataset seed (61k items)
 │   ├── debug_cache.py        # Cache inspection
 │   └── ...others
 │
-├── tests/                    # Test suites (10 files)
+├── tests/                    # Test suites
 │   ├── test_all_features.py  # Comprehensive verification (✅ PASSING)
 │   ├── demo_fast_slow_paths.py
 │   ├── test_rag_search.py
 │   ├── sanity_check.py
 │   └── ...others
 │
-├── docs/                     # Documentation (19 files)
+├── docs/                     # Documentation
 │   ├── PROJECT_OVERVIEW.md
 │   ├── CACHE_FIRST_ARCHITECTURE.md
 │   ├── DOCKER_SETUP.md
@@ -517,6 +517,13 @@ QDRANT_COLLECTION=soc_attacks     # Vector collection name
 
 # Optional
 HF_TOKEN=hf_...                   # HuggingFace token (higher rate limits)
+
+# Performance tuning (optional, useful for heavy batch)
+RAG_MAX_WORKERS=6                 # Parallel RAG lookups for unique slow-path requests
+LLM_BULK_CHUNK_SIZE=12            # Slow items per Groq bulk call
+LLM_MAX_QUERY_CHARS=1500          # Truncate oversized request text before LLM
+LLM_MAX_RAG_CHARS=2000            # Truncate oversized RAG context before LLM
+LLM_BULK_MAX_TOKENS_CAP=4096      # Upper bound of max_tokens for bulk completion
 ```
 
 ### API Configuration

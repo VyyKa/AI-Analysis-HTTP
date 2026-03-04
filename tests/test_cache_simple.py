@@ -7,95 +7,61 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from nodes.nodes_cache import cache_check_node, cache_save_node
 
-# Mock SOCState and items
-test_state = {
-    "items": [
+def _mk_state(item_id: str, request: str) -> dict:
+    return {
+        "items": [
+            {
+                "id": item_id,
+                "raw_request": request,
+                "cache_hit": False,
+                "attack_type": "",
+                "rule_score": 0,
+                "severity": "",
+                "fast_decision": "",
+                "evidence": [],
+                "attack_candidates": [],
+                "blocked": False,
+            }
+        ]
+    }
+
+
+def test_cache_check_and_save_roundtrip(monkeypatch):
+    request = "/api/users?id=1 OR 1=1"
+    in_memory_cache = {}
+
+    def fake_cache_get(raw_request: str):
+        return in_memory_cache.get(raw_request)
+
+    def fake_cache_set(raw_request: str, data: dict):
+        in_memory_cache[raw_request] = data
+
+    import nodes.nodes_cache as n_cache
+
+    monkeypatch.setattr(n_cache, "cache_get", fake_cache_get)
+    monkeypatch.setattr(n_cache, "cache_set", fake_cache_set)
+
+    first = _mk_state("1", request)
+    result1 = cache_check_node(first)
+    assert result1["items"][0]["cache_hit"] is False
+
+    first["items"][0].update(
         {
-            "id": "1",
-            "raw_request": "/api/users?id=1 OR 1=1",
-            "cache_hit": False,  # Will be set by cache_check_node
-            "attack_type": "",
-            "rule_score":0,
-            "severity": "",
-            "fast_decision": "",
-            "evidence": [],
-            "attack_candidates": [],
-            "blocked": False,
+            "attack_type": "SQL Injection",
+            "rule_score": 10,
+            "severity": "High",
+            "fast_decision": "BLOCK",
+            "evidence": ["SQL Injection"],
+            "blocked": True,
         }
-    ]
-}
+    )
+    cache_save_node(first)
 
-print("=" * 80)
-print("Test: Cache Checking Node")
-print("=" * 80)
+    second = _mk_state("2", request)
+    result2 = cache_check_node(second)
+    item = result2["items"][0]
 
-# First call - cache miss
-print("\n1. First request (cache miss)")
-result1 = cache_check_node(test_state)
-print(f"   Cache Hit: {result1['items'][0]['cache_hit']}")
-
-# Second call - same request (cache hit)
-print("\n2. Second request (same URL - should cache hit)")
-test_state2 = {
-    "items": [
-        {
-            "id": "2",
-            "raw_request": "/api/users?id=1 OR 1=1",  # Same as before
-            "cache_hit": False,
-            "attack_type": "",
-            "rule_score": 0,
-            "severity": "",
-            "fast_decision": "",
-            "evidence": [],
-            "attack_candidates": [],
-            "blocked": False,
-        }
-    ]
-}
-result2 = cache_check_node(test_state2)
-print(f"   Cache Hit: {result2['items'][0]['cache_hit']}")
-
-# Simulate cache save
-print("\n3. Save first request to cache")
-test_state['items'][0].update({
-    "attack_type": "SQL Injection",
-    "rule_score": 10,
-    "severity": "High",
-    "fast_decision": "BLOCK",
-    "evidence": ["SQL Injection"],
-    "blocked": True,
-})
-cache_save_node(test_state)
-print("   ✅ Saved to cache")
-
-# Third call - check again after save
-print("\n4. Third request (after save - cache hit)")
-test_state3 = {
-    "items": [
-        {
-            "id": "3",
-            "raw_request": "/api/users?id=1 OR 1=1",
-            "cache_hit": False,
-            "attack_type": "",
-            "rule_score": 0,
-            "severity": "",
-            "fast_decision": "",
-            "evidence": [],
-            "attack_candidates": [],
-            "blocked": False,
-        }
-    ]
-}
-result3 = cache_check_node(test_state3)
-item = result3['items'][0]
-print(f"   Cache Hit: {item['cache_hit']}")
-print(f"   Attack Type: {item['attack_type']}")
-print(f"   Score: {item['rule_score']}")
-print(f"   Decision: {item['fast_decision']}")
-
-print("\n" + "=" * 80)
-print("Flow Verification:")
-print("=" * 80)
-print("✅ Cache checking works correctly")
-print("✅ Hit items skip rule engine analysis")
-print("✅ Miss items continue to analysis")
+    assert item["cache_hit"] is True
+    assert item["attack_type"] == "SQL Injection"
+    assert item["rule_score"] == 10
+    assert item["fast_decision"] == "BLOCK"

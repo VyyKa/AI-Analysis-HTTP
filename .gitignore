@@ -29,6 +29,7 @@ venv_langgraph/
 ENV/
 env/
 .venv
+.venv/
 
 # IDE
 .vscode/
@@ -36,7 +37,6 @@ env/
 *.swp
 *.swo
 *~
-.DS_Store
 
 # Environment variables
 .env
@@ -50,7 +50,21 @@ env/
 # Testing
 .pytest_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
+
+# Python tooling caches
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.tox/
+.nox/
+.pyre/
+.pytype/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
 
 # Logs
 *.log
@@ -60,6 +74,9 @@ logs/
 tmp/
 temp/
 *.tmp
+*.bak
+*.orig
+*.rej
 
 # OS
 Thumbs.db
@@ -68,6 +85,7 @@ Thumbs.db
 # Project specific
 Untitled-1.txt
 .groq_*
+.python-version
 
 # Generated files
 *.mmd
@@ -77,3 +95,5 @@ chroma_db/
 
 # Cache persistent storage
 cache_data.pkl
+cache_data.pkl/
+data/cache_data.pkl

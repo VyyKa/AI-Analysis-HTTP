@@ -37,7 +37,7 @@ def test_bulk_invoked(monkeypatch):
     monkeypatch.setattr(n_cache, "cache_get", lambda txt: None)
     monkeypatch.setattr(n_cache, "cache_set", lambda txt, val: None)
 
-    payload = {"requests": ["q=" for _ in range(3)]}
+    payload = {"requests": ["q=a", "q=b", "q=c"]}
     result = soc_app.invoke(payload)
     assert len(result["result_json"]["results"]) == 3
     assert calls["bulk"] == 1
@@ -67,7 +67,7 @@ def test_bulk_fallback_to_single(monkeypatch):
     monkeypatch.setattr(n_cache, "cache_get", lambda txt: None)
     monkeypatch.setattr(n_cache, "cache_set", lambda txt, val: None)
 
-    payload = {"requests": ["q=" for _ in range(4)]}
+    payload = {"requests": [f"q={i}" for i in range(4)]}
     result = soc_app.invoke(payload)
     assert len(result["result_json"]["results"]) == 4
     assert single_calls["count"] == 4
@@ -93,7 +93,7 @@ def test_performance(monkeypatch):
     monkeypatch.setattr(n_cache, "cache_get", lambda txt: None)
     monkeypatch.setattr(n_cache, "cache_set", lambda txt, val: None)
 
-    payload = {"requests": ["q=" for _ in range(5)]}
+    payload = {"requests": [f"q={i}" for i in range(5)]}
     t0 = time.time()
     soc_app.invoke(payload)
     t_bulk = time.time() - t0
@@ -107,3 +107,34 @@ def test_performance(monkeypatch):
 
     # bulk should not be slower than performing singles back-to-back
     assert t_bulk <= t_single + 0.01
+
+
+def test_deduplicate_identical_slow_items(monkeypatch):
+    calls = {"single": 0, "bulk": 0}
+
+    def fake_single(q, ctx):
+        calls["single"] += 1
+        return {"analysis": {"threat_score": 0, "attack_type": "Normal", "justification": "ok", "action": "ALLOW"}}
+
+    def fake_bulk(qs, cs):
+        calls["bulk"] += 1
+        return [{"analysis": {"threat_score": 0, "attack_type": "Normal", "justification": "ok", "action": "ALLOW"}} for _ in qs]
+
+    monkeypatch.setattr(lb, "llm_analyze", fake_single)
+    monkeypatch.setattr(lb, "llm_bulk_analyze", fake_bulk)
+    monkeypatch.setattr(n_llm, "llm_analyze", fake_single)
+    monkeypatch.setattr(n_llm, "llm_bulk_analyze", fake_bulk)
+    monkeypatch.setattr(n_rag, "vector_search", lambda q, k=3: [])
+
+    import backends.cache_backend as cb
+    cb._CACHE.clear()
+    import nodes.nodes_cache as n_cache
+    monkeypatch.setattr(n_cache, "cache_get", lambda txt: None)
+    monkeypatch.setattr(n_cache, "cache_set", lambda txt, val: None)
+
+    payload = {"requests": ["q=dup" for _ in range(8)]}
+    result = soc_app.invoke(payload)
+
+    assert len(result["result_json"]["results"]) == 8
+    assert calls["single"] == 1
+    assert calls["bulk"] == 0

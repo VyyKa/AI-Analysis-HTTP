@@ -38,6 +38,28 @@ You MUST output EXACTLY this JSON structure:
 MODEL = "llama-3.1-8b-instant"
 
 
+def _env_int(name: str, default: int) -> int:
+    try:
+        value = int(os.getenv(name, str(default)))
+        return value if value > 0 else default
+    except (TypeError, ValueError):
+        return default
+
+
+def _truncate_text(text: str, max_chars: int) -> str:
+    value = str(text or "")
+    if len(value) <= max_chars:
+        return value
+    return value[:max_chars] + "\n... [truncated]"
+
+
+def _bulk_max_tokens(batch_size: int) -> int:
+    # Keep responses bounded to avoid very large generations on heavy batches.
+    token_cap = _env_int("LLM_BULK_MAX_TOKENS_CAP", 4096)
+    estimated = 180 * max(batch_size, 1) + 256
+    return max(512, min(token_cap, estimated))
+
+
 def llm_bulk_analyze(queries: list[str], rag_contexts: list[str]) -> list[dict]:
     """Send a batch of requests to Groq in a single API call.
 
@@ -48,10 +70,15 @@ def llm_bulk_analyze(queries: list[str], rag_contexts: list[str]) -> list[dict]:
     if not queries:
         return []
 
+    max_query_chars = _env_int("LLM_MAX_QUERY_CHARS", 1500)
+    max_rag_chars = _env_int("LLM_MAX_RAG_CHARS", 2000)
+
     # Build combined user message
     combined = []
     for idx, (q, ctx) in enumerate(zip(queries, rag_contexts), start=1):
-        combined.append(f"=== REQUEST {idx} ===\nHTTP REQUEST:\n{q}\n\nRELATED CONTEXT (RAG):\n{ctx or 'None'}")
+        q_view = _truncate_text(q, max_query_chars)
+        ctx_view = _truncate_text(ctx or "None", max_rag_chars)
+        combined.append(f"=== REQUEST {idx} ===\nHTTP REQUEST:\n{q_view}\n\nRELATED CONTEXT (RAG):\n{ctx_view}")
     user_prompt = (
         "\n\n".join(combined)
         + "\n\nAnalyze each request above and return STRICT JSON object: "
@@ -69,7 +96,7 @@ def llm_bulk_analyze(queries: list[str], rag_contexts: list[str]) -> list[dict]:
             model=MODEL,
             messages=messages,
             temperature=0.1,
-            max_tokens=250 * len(queries),
+            max_tokens=_bulk_max_tokens(len(queries)),
             response_format={"type": "json_object"}
         )
         verdict = completion.choices[0].message.content.strip()
@@ -105,11 +132,16 @@ def llm_analyze(query: str, rag_context: str) -> dict:
     Called ONLY when request is NOT blocked by rule engine and cache MISS.
     Falls back to a safe default if the API is unreachable.
     """
+    max_query_chars = _env_int("LLM_MAX_QUERY_CHARS", 1500)
+    max_rag_chars = _env_int("LLM_MAX_RAG_CHARS", 2000)
+    query_view = _truncate_text(query, max_query_chars)
+    context_view = _truncate_text(rag_context or "None", max_rag_chars)
+
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},
         {
             "role": "user",
-            "content": f"HTTP REQUEST:\n{query}\n\nRELATED CONTEXT (RAG):\n{rag_context or 'None'}\n\nAnalyze this request and return JSON.",
+            "content": f"HTTP REQUEST:\n{query_view}\n\nRELATED CONTEXT (RAG):\n{context_view}\n\nAnalyze this request and return JSON.",
         },
     ]
 

@@ -28,7 +28,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./cache_data.pkl:/app/cache/cache_data.pkl
+      - ./data:/app/data
       - app_logs:/app/logs
     depends_on:
       - qdrant
