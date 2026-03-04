@@ -25,7 +25,9 @@ A production-ready security analysis pipeline combining:
 - **Ultra-Lightweight**: 415MB CPU-only Docker image (no PyTorch/CUDA)
 - **Cache-First**: Instant responses (<50ms) for repeated requests
 - **Fast Path**: Rule-based detection (50-200ms) for obvious attacks
-- **Slow Path**: LLM analysis (2-5s via Groq) for complex/unknown patterns
+- **Slow Path**: RAG + LLM analysis (2-5s via Groq) for complex/unknown patterns
+- **Batch-Aware Routing**: Mixed batches are handled per-item (fast items return fast, only ambiguous items go slow)
+- **Bulk LLM for Slow Items**: Ambiguous items are grouped into one LLM call with safe fallback to per-item mode
 - **RAG-Enhanced**: Vector search with real-world attack examples
 - **Explainable Output**: Threat scores, evidence, and recommendations
 
@@ -37,9 +39,10 @@ A production-ready security analysis pipeline combining:
 - Reduces redundant API calls to LLM and embedding services
 
 **Hybrid Architecture**
-- **Fast Path**: Rule engine detects obvious attacks (score ≥ 5) in 50-200ms
-- **Slow Path**: Groq LLM analyzes ambiguous patterns (score < 5) in 2-5s
-- **Router Node**: Intelligent path selection based on threat score
+- **Fast Path**: Rule engine finalizes `BLOCK` / `ALLOW` in 50-200ms
+- **Slow Path**: Only `REVIEW` / `MONITOR` items go to RAG + Groq LLM (2-5s)
+- **Router Node**: Item-aware batch routing (no whole-batch slowdown)
+- **LLM Node**: Uses one bulk call for multiple slow items, then auto-fallback to single calls on errors
 
 **RAG-Enhanced LLM Analysis**
 - HuggingFace API embeddings (384-dimensional vectors)
@@ -59,44 +62,45 @@ A production-ready security analysis pipeline combining:
 
 ## Architecture
 
-State machine pipeline using LangGraph with 7 nodes processing HTTP requests through cache-first logic. Requests are analyzed at multiple levels before returning a verdict.
+State machine pipeline using LangGraph with 8 nodes processing HTTP requests through cache-first logic. Requests are analyzed at multiple levels before returning a verdict.
 
 ### System Flow Diagram
 
 ![LangGraph Flow](artifacts/langgraph.png)
 
-### 7-Node Pipeline Flow
+### 8-Node Pipeline Flow
 
 ```
-Request → [Decode] → [Cache Check] ──→ [HIT] → [Response]
-                          ↓ [MISS]
-                    [Rule Engine] (score calculation)
-                          ↓
-                     [Router] (score ≥ 5?)
-                    ↙ FAST           SLOW ↘
-            [Save Cache]         [LLM Analyze]
-                    ↘                  ↙
-                    [Build Response] → Output
+Request → [Decode] → [Cache Check] ──→ [HIT] → [Save Cache] → [Build Response] → Output
+          ↓ [MISS]
+        [Rule Engine] (score calculation)
+          ↓
+         [Router] (item-aware decision)
+        ↙ FAST                         SLOW ↘
+    [Save Cache]                    [RAG] → [LLM Analyze]
+        ↘                               ↙
+        [Build Response] → Output
 ```
 
 **Node Descriptions:**
 - **Decode**: Preprocess and validate HTTP request
 - **Cache Check**: Return cached result if exists (<50ms)
 - **Rule Engine**: Score threat level using OWASP CRS patterns (50-200ms)
-- **Router**: Decision point - FAST path if score ≥ 5, else SLOW path
-- **LLM Analyze**: Groq analysis for borderline cases with RAG context (2-5s)
+- **Router**: Decision point per item - finalize fast decisions, send only ambiguous items to slow path
+- **RAG**: Retrieve similar known patterns for ambiguous items only
+- **LLM Analyze**: Groq analysis with bulk mode for slow-item groups and fallback for resilience
 - **Save Cache**: Persist result to `data/cache_data.pkl` for future requests
 - **Build Response**: Format final output with scores, evidence, recommendations
 
 ### Project Structure
 
 ```
-LangChain/
+AI-Analysis-HTTP/
 ├── api.py                    # FastAPI 8000 /analyze endpoint
-├── graph_app.py              # Main 7-node LangGraph pipeline
+├── graph_app.py              # Main 8-node LangGraph pipeline
 ├── soc_state.py              # Pydantic state schema
 ├── 
-├── backends/                 # 7 backend services
+├── backends/                 # Core backend services
 │   ├── rag_backend.py        # HuggingFace + Qdrant vector search
 │   ├── rule_engine.py        # OWASP CRS pattern matching
 │   ├── llm_backend.py        # Groq LLM integration
@@ -105,11 +109,12 @@ LangChain/
 │   ├── llm_backend_mock.py   # Mock LLM (for testing)
 │   └── __init__.py
 │
-├── nodes/                    # 7 LangGraph nodes
+├── nodes/                    # LangGraph nodes
 │   ├── nodes_cache.py        # Cache check node
 │   ├── nodes_cache_save.py   # Cache save node
 │   ├── nodes_rule.py         # Rule engine node
 │   ├── nodes_router.py       # Fast/slow router
+│   ├── nodes_rag.py          # RAG node (slow path only)
 │   ├── nodes_llm.py          # LLM analysis node
 │   ├── nodes_response.py     # Response builder node
 │   └── __init__.py
@@ -149,7 +154,7 @@ LangChain/
 │
 ├── docker-compose.yml        # Full stack (Qdrant + API)
 ├── docker-compose.hf.yml     # HF API variant
-├── Dockerfile.hf             # Ultra-lightweight image (415MB)
+├── Dockerfile                # Ultra-lightweight image (415MB)
 ├── requirements-hf.txt       # Minimal dependencies
 ├── .env.example              # Configuration template
 ├── README.md                 # This file
@@ -164,7 +169,7 @@ LangChain/
 | **API Server** | FastAPI | HTTP server on port 8000 |
 | **Embeddings** | HuggingFace API | 384-dim vectors (no local models) |
 | **Vector DB** | Qdrant | Persistent storage for attack patterns |
-| **LLM Analysis** | Groq | `llama-3.3-70b-versatile` model |
+| **LLM Analysis** | Groq | `llama-3.1-8b-instant` model |
 | **Caching** | Pickle file | `data/cache_data.pkl` |
 | **Container** | Docker | 415MB CPU-only image |
 | **Python** | 3.10+ | Lightweight dependencies |
@@ -354,8 +359,15 @@ All tests pass ✅ (verified with comprehensive test suite)
 ### Run All Tests
 
 ```bash
-# Comprehensive verification of all 6 components
-python tests/test_all_features.py
+# Regression suite
+python -m pytest -q
+
+# Batch routing + LLM bulk behavior
+python -m pytest tests/test_llm_batching.py tests/test_graph_flow_rag.py -q
+
+# End-to-end flow validation scripts
+python scripts/full_flow_validation.py
+python scripts/full_flow_validation_thorough.py
 
 # Results:
 # Module imports
@@ -459,7 +471,7 @@ curl http://localhost:8000/health
 
 ```bash
 # Build image (415MB)
-docker build -f Dockerfile.hf -t soc-analysis:latest .
+docker build -f Dockerfile -t soc-analysis:latest .
 
 # Run with docker-compose
 docker compose -f docker-compose.hf.yml up -d
@@ -473,7 +485,7 @@ curl http://localhost:8000/health
 | Image | Size | Features | Use Case | Docker Hub |
 |-------|------|----------|----------|-----------|
 | `soc-analysis-capstone` (HF API) | 415MB | CPU-only, No PyTorch | Production (recommended) | ✅ Available |
-| `Dockerfile.hf` | 415MB | HF API, No PyTorch | Build locally | - |
+| `Dockerfile` | 415MB | HF API, No PyTorch | Build locally | - |
 | `docker-compose.yml` | - | Full stack with Qdrant | Local dev/testing | - |
 | `docker-compose.hf.yml` | - | HF API variant | Cloud deployment | - |
 
