@@ -1,6 +1,5 @@
 from pathlib import Path
 import sys
-import json
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -33,13 +32,13 @@ def build_graph():
     # slow path will later connect router -> rag -> llm
     graph.add_conditional_edges(
         "cache_check",
-        lambda x: "response" if x.get("cache_hit") else "rule_engine",
-        {"rule_engine": "rule_engine", "response": "build_response"}
+        lambda x: "cache_hit" if x.get("cache_hit") else "cache_miss",
+        {"cache_hit": "save_cache", "cache_miss": "rule_engine"}
     )
     graph.add_edge("rule_engine", "router")
     graph.add_conditional_edges(
         "router",
-        lambda x: x.get("route", "llm_analyze"),
+        lambda x: x.get("route", "fast"),
         {"fast": "save_cache", "slow": "rag"}
     )
     graph.add_edge("rag", "llm_analyze")
@@ -81,10 +80,6 @@ def main() -> None:
         return
 
     print("\n✅ Graph visualization complete!")
-
-
-if __name__ == "__main__":
-    main()
 
 
 if __name__ == "__main__":

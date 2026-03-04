@@ -28,10 +28,19 @@ def route_cache_hit(state: SOCState) -> str:
     return "cache_miss"    # Not cached, do analysis
 
 def route_after_rule(state: SOCState) -> str:
-    """After rule: fast path (blocked) or slow path (needs LLM)."""
-    if state.get("items") and all(item.get("blocked") for item in state["items"]):
+    """After rule: choose slow path only if any item still needs LLM analysis."""
+    items = state.get("items", [])
+    if not items:
         return "fast"
-    return "slow"
+
+    needs_slow = any(
+        (not item.get("blocked"))
+        and (not item.get("cache_hit"))
+        and (not item.get("final_msg"))
+        and (item.get("fast_decision") not in ("ALLOW", "BLOCK"))
+        for item in items
+    )
+    return "slow" if needs_slow else "fast"
 
 # Flow: decode → cache_check → {hit: response} | {miss: rule → router → {fast|slow → rag → llm}}
 graph.set_entry_point("decode")

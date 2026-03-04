@@ -17,7 +17,16 @@ def rag_node(state: SOCState) -> SOCState:
     HuggingFace embeddings) so we don't attempt to cache it locally.
     """
     for item in state.get("items", []):
+        # Only fetch RAG for items that still need LLM processing
+        if item.get("blocked") or item.get("cache_hit") or item.get("final_msg"):
+            item["rag_context"] = item.get("rag_context", "")
+            continue
+
         raw_request = item.get("raw_request", "")
-        search_results = vector_search(raw_request)
-        item["rag_context"] = rag_list_parser(search_results)
+        try:
+            search_results = vector_search(raw_request)
+            item["rag_context"] = rag_list_parser(search_results)
+        except Exception:
+            # Keep flow resilient if vector backend is unavailable
+            item["rag_context"] = ""
     return state
