@@ -1,6 +1,7 @@
 import os
 import re
 import math
+import html
 import urllib.parse
 from datetime import datetime
 from typing import Dict, List, Any
@@ -69,6 +70,8 @@ def is_normal_request(raw: str) -> bool:
     # URL decode for checking (to catch encoded attacks like %20UNION%20SELECT)
     decoded_once = urllib.parse.unquote_plus(raw)
     decoded_twice = urllib.parse.unquote_plus(decoded_once)
+    decoded_html_once = html.unescape(decoded_once)
+    decoded_html_twice = html.unescape(decoded_twice)
     
     # Even if first line looks normal, reject if body/headers contain suspicious chars.
     # Check both raw (for encoded payloads like %0d%0a) and lowercased forms.
@@ -89,6 +92,8 @@ def is_normal_request(raw: str) -> bool:
         r"%0[dD]%0[aA]|%0[aA]%0[dD]|%0[dD]|%0[aA]",
         r"(?:=|%3[dD])[^&\s]{0,50}[\r\n]",
         r"(?:\?|&)\w+=(?:[^&]*\+)?\b(?:ping|nslookup|dig|tracert|traceroute|wget|curl|bash|sh|cmd)\b",  # cmd in param
+        r"(?:#exec|%23exec)\s+(?:cmd|cgi)\s*=",  # SSI command execution
+        r"(?:=|%3[dD])[^&\s]{0,220}(?:/usr/bin/(?:id|whoami|uname|cat)|/bin/(?:id|whoami|uname|cat|sh|bash)|/etc/(?:passwd|shadow))\b",  # direct command/file probes
         r"__proto__",                   # Prototype pollution
         r"rO0[A-Za-z0-9+/]{10,}",      # Java deserialization
         r"(?:O|a):\d+:['\"]",           # PHP deserialization
@@ -103,7 +108,8 @@ def is_normal_request(raw: str) -> bool:
     for pat in SUSPICIOUS_QUICK:
         # Check raw (catches %0d%0a), lowercased, and decoded versions to catch encoded attacks
         if re.search(pat, raw, re.I | re.S) or re.search(pat, lower, re.I | re.S) or \
-           re.search(pat, decoded_once, re.I | re.S) or re.search(pat, decoded_twice, re.I | re.S):
+           re.search(pat, decoded_once, re.I | re.S) or re.search(pat, decoded_twice, re.I | re.S) or \
+           re.search(pat, decoded_html_once, re.I | re.S) or re.search(pat, decoded_html_twice, re.I | re.S):
             return False
 
     return True
@@ -136,6 +142,12 @@ def normalize(raw: str) -> Dict[str, str]:
     # HTML entities decode (&#x hex and &#decimal)
     decoded = re.sub(r"&#x([0-9a-fA-F]+);?", lambda m: chr(int(m.group(1), 16)), decoded)
     decoded = re.sub(r"&#(\d+);?", lambda m: chr(int(m.group(1))), decoded)
+    # Decode named entities (&lt;, &quot;, ...) which are frequently used for payload obfuscation.
+    for _ in range(2):
+        previous = decoded
+        decoded = html.unescape(decoded)
+        if decoded == previous:
+            break
 
     # Unicode & Hex escape sequences (\uXXXX, \xXX, %XX)
     decoded = re.sub(r"\\u([0-9a-fA-F]{4})", lambda m: chr(int(m.group(1), 16)), decoded)
@@ -289,12 +301,14 @@ PATTERNS = {
             # CRITICAL - Direct RCE
             {"regex": r"(?:;|\||&&|\|\|)\s*(?:bash|sh|zsh|ksh|csh|tcsh|powershell|cmd\.exe|cmd)\b", "severity": "CRITICAL"},
             {"regex": r"(?:;|\||&&|\|\|)\s*(?:wget|curl|nc|netcat|ncat|socat)\s+", "severity": "CRITICAL"},
+            {"regex": r"(?:#exec|%23exec)\s+(?:cmd|cgi)\s*=", "severity": "CRITICAL"},
+            {"regex": r"(?:=|%3[dD])[^&\s]{0,220}(?:/usr/bin/(?:id|whoami|uname|cat)|/bin/(?:id|whoami|uname|cat|sh|bash))\b", "severity": "CRITICAL"},
             {"regex": r"/bin/(?:ba)?sh\s+(?:-i|-c|\$)", "severity": "CRITICAL"},
             {"regex": r">\s*/dev/(?:tcp|udp)/", "severity": "CRITICAL"},
             {"regex": r"\b(?:python|python3|perl|ruby|php|node)\s+-[ce]\s+['\"]", "severity": "CRITICAL"},
 
             # ERROR - High confidence
-            {"regex": r"(?:;|\||&&|\|\|)\s*(?:id|whoami|uname|pwd|ls\s|dir\s|cat\s|type\s)", "severity": "ERROR"},
+            {"regex": r"(?:;|\||&&|\|\|)\s*(?:(?:/usr/bin/)?(?:id|whoami|uname|pwd)|ls\s|dir\s|cat\s|type\s)", "severity": "CRITICAL"},
             {"regex": r"`[^`]{1,200}`", "severity": "ERROR"},
             {"regex": r"\$\([^)]{1,200}\)", "severity": "ERROR"},
             {"regex": r">\s*/tmp/[a-z]", "severity": "ERROR"},

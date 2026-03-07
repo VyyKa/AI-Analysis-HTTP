@@ -4,6 +4,16 @@ from soc_state import SOCState
 from backends.llm_backend import llm_analyze, llm_bulk_analyze
 
 
+ATTACK_TYPE_CANONICAL = {
+    "xss": "Cross-Site Scripting",
+    "path traversal": "Directory Traversal",
+    "directory traversal": "Directory Traversal",
+    "lfi": "Local File Inclusion",
+    "ssrf": "Server-Side Request Forgery",
+    "sqli": "SQL Injection",
+}
+
+
 def _env_int(name: str, default: int) -> int:
     try:
         value = int(os.getenv(name, str(default)))
@@ -71,13 +81,42 @@ def _detect_hallucination(item: dict, analysis_data: dict) -> bool:
     return False
 
 
+def _canonicalize_attack_type(value: object) -> str:
+    raw_type = str(value or "").strip()
+    if not raw_type:
+        return "Unknown"
+    return ATTACK_TYPE_CANONICAL.get(raw_type.lower(), raw_type)
+
+
+def _is_specific_attack_type(value: str) -> bool:
+    return value.lower() not in {"", "unknown", "normal", "benign", "none"}
+
+
+def _merge_attack_type(item: dict, llm_attack_type: object) -> str:
+    """
+    Prefer deterministic rule-engine labels when rule confidence is non-trivial.
+    This prevents LLM from downgrading known attack patterns to "Benign".
+    """
+    rule_score = item.get("rule_score", 0)
+    rule_attack_type = _canonicalize_attack_type(item.get("attack_type", "Unknown"))
+    llm_attack = _canonicalize_attack_type(llm_attack_type)
+
+    if isinstance(rule_score, (int, float)) and rule_score >= 3 and _is_specific_attack_type(rule_attack_type):
+        if not _is_specific_attack_type(llm_attack):
+            return rule_attack_type
+        if llm_attack.lower() != rule_attack_type.lower():
+            return rule_attack_type
+
+    return llm_attack
+
+
 def _apply_llm_result(item: dict, result: dict) -> None:
     item["llm_output"] = result
     analysis_data = result.get("analysis", {})
 
     if isinstance(analysis_data, dict):
         threat_score = analysis_data.get("threat_score", 0)
-        attack_type = analysis_data.get("attack_type", "Unknown")
+        attack_type = _merge_attack_type(item, analysis_data.get("attack_type", "Unknown"))
         justification = analysis_data.get("justification", "")
         action = analysis_data.get("action", "REVIEW").upper()
         item["attack_type"] = attack_type

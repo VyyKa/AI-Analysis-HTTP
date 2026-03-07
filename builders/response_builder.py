@@ -12,6 +12,7 @@ ATTACK_GROUPS = {
     "Log Injection": "log_injection",
     "Unknown": "generic",
     "Normal": "generic",
+    "Benign": "generic",
 }
 
 def get_suggested_actions(fast_decision, blocked):
@@ -110,7 +111,7 @@ def response_builder(state: SOCState) -> dict:
         
         # Map attack type to label
         attack_type = item["attack_type"]
-        if attack_type in ["Unknown", "Normal"]:
+        if attack_type in ["Unknown", "Normal", "Benign"]:
             label = "Normal"
             attack_type_field = "none"
         else:

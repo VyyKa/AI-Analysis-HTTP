@@ -80,7 +80,7 @@ def test_hallucination_detection():
 def test_router_logic():
     """Test improved router logic."""
     print("\n" + "=" * 60)
-    print("TEST 2: Router Node Logic - rule_score=0 Fast Path")
+    print("TEST 2: Router Node Logic - rule_score=0 No Auto-Allow")
     print("=" * 60)
     
     state = {
@@ -107,10 +107,10 @@ def test_router_logic():
     print(f"  Blocked: {item.get('blocked')}")
     print(f"  Final Message: {item.get('final_msg')}")
     
-    assert item["fast_decision"] == "ALLOW", "rule_score=0 should result in ALLOW"
+    assert item["fast_decision"] == "REVIEW", "no_pattern_match should require review"
     assert item["blocked"] == False, "rule_score=0 should not block"
-    assert "[FAST_ALLOW]" in item["final_msg"], "Should indicate fast allow"
-    print("  ✅ PASS: Correctly fast-allowed rule_score=0 requests")
+    assert item["final_msg"] == "", "Should stay empty to route through slow path"
+    print("  ✅ PASS: Correctly kept no-pattern request on review path")
 
 
 def test_apply_llm_result():
@@ -209,7 +209,7 @@ if __name__ == "__main__":
         print("=" * 60)
         print("\nSummary of Improvements:")
         print("1. ✅ Hallucination detection enabled")
-        print("2. ✅ rule_score=0 fast-allows (no LLM)")
+        print("2. ✅ no_pattern_match routes to REVIEW (safe by default)")
         print("3. ✅ LLM Base64/encoding hallucination detection")
         print("4. ✅ Confidence validation (threat_score >= 6 required for BLOCK)")
         print("5. ✅ System prompt clarifies RAG examples vs actual request")
