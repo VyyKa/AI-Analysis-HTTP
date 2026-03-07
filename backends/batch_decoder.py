@@ -45,6 +45,7 @@ def batch_decoder(input_data) -> SOCState:
             "rag_context": "",
             "llm_output": {},
             "final_msg": "",
+            "hallucination_suspected": False,
         })
 
     return {

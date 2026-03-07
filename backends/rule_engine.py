@@ -66,6 +66,10 @@ def is_normal_request(raw: str) -> bool:
     if not matched_normal:
         return False
 
+    # URL decode for checking (to catch encoded attacks like %20UNION%20SELECT)
+    decoded_once = urllib.parse.unquote_plus(raw)
+    decoded_twice = urllib.parse.unquote_plus(decoded_once)
+    
     # Even if first line looks normal, reject if body/headers contain suspicious chars.
     # Check both raw (for encoded payloads like %0d%0a) and lowercased forms.
     SUSPICIOUS_QUICK = [
@@ -97,8 +101,9 @@ def is_normal_request(raw: str) -> bool:
     ]
     lower = raw.lower()
     for pat in SUSPICIOUS_QUICK:
-        # Check both raw (catches %0d%0a) and lowercased
-        if re.search(pat, raw, re.I | re.S) or re.search(pat, lower, re.I | re.S):
+        # Check raw (catches %0d%0a), lowercased, and decoded versions to catch encoded attacks
+        if re.search(pat, raw, re.I | re.S) or re.search(pat, lower, re.I | re.S) or \
+           re.search(pat, decoded_once, re.I | re.S) or re.search(pat, decoded_twice, re.I | re.S):
             return False
 
     return True

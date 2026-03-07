@@ -146,7 +146,7 @@ def response_builder(state: SOCState) -> dict:
             "event_type": event_type,
             "source": source,
             "explanation": item["final_msg"] or f"Request analyzed with {source}",
-            "hallucination_suspected": False,
+            "hallucination_suspected": item.get("hallucination_suspected", False),
             "hallucination_reasons": [],
             "generated_at": datetime.now(timezone.utc).isoformat()
         }

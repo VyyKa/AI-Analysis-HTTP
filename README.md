@@ -169,7 +169,7 @@ AI-Analysis-HTTP/
 | **API Server** | FastAPI | HTTP server on port 8000 |
 | **Embeddings** | HuggingFace API | 384-dim vectors (no local models) |
 | **Vector DB** | Qdrant | Persistent storage for attack patterns |
-| **LLM Analysis** | Groq | `llama-3.1-8b-instant` model |
+| **LLM Analysis** | Groq | `openai/gpt-oss-120b` model |
 | **Caching** | Pickle file | `data/cache_data.pkl` |
 | **Container** | Docker | 415MB CPU-only image |
 | **Python** | 3.10+ | Lightweight dependencies |
@@ -601,6 +601,19 @@ pip install -r requirements-hf.txt
 pip install -e .
 ```
 
+### Issue: "Empty verdict / URL-encoded attacks not detected"
+```bash
+# 1. Rule engine cần URL decode trước khi check patterns
+#    Đã fix trong backends/rule_engine.py: is_normal_request()
+#    Kiểm tra cả decoded_once và decoded_twice
+
+# 2. Xoá cache cũ (có thể chứa verdict cũ sai)
+rm data/cache_data.pkl
+
+# 3. Restart API
+python api.py
+```
+
 ## API Reference
 
 ### POST /analyze
@@ -650,6 +663,73 @@ Health check endpoint for container orchestration.
   "service": "soc-analysis"
 }
 ```
+
+## Integration with Userstack (http-ingest)
+
+Hệ thống được tích hợp với **userstack** pipeline để phân tích traffic thực tế:
+
+```
+Attacker → nginx WAF (:80) → GoReplay → http-ingest (:9002) → soc-app (:8000/analyze)
+```
+
+### Batch Processing
+
+http-ingest gom request thành batch trước khi gửi:
+- **Batch size**: 10 request → gửi ngay
+- **Batch timeout**: 1.5s → gửi tất cả đã gom được
+- **Format**: `{"requests": ["raw_req_1", ..., "raw_req_10"]}`
+
+### Response Format cho http-ingest
+
+http-ingest parse response theo cấu trúc:
+```json
+{
+  "result_json": {
+    "results": [
+      {"label": "SQL_INJECTION", "evidence": ["UNION keyword"], "threat_score": 95, ...}
+    ]
+  }
+}
+```
+
+Mapping: `label` → `verdict`, `evidence` → `snippets`
+
+### Khởi động pipeline
+
+```bash
+# 1. Chạy soc-app trên host
+cd AI-Analysis-HTTP
+python api.py   # port 8000
+
+# 2. Chạy userstack với attack profile
+cd userstack
+docker-compose --profile attack up -d
+
+# 3. Chạy attack test
+python attack_test.py
+```
+
+## Thay đổi gần đây
+
+### Rule Engine – URL Decoding (`backends/rule_engine.py`)
+
+Hàm `is_normal_request()` đã được cải thiện để phát hiện attack payload bị URL-encoded:
+
+- **Trước**: Chỉ kiểm tra raw string → `%20UNION%20SELECT` bypass được detection
+- **Sau**: URL decode 1 lần + 2 lần trước khi check suspicious patterns
+  ```python
+  decoded_once = urllib.parse.unquote_plus(raw)
+  decoded_twice = urllib.parse.unquote_plus(decoded_once)
+  ```
+- Kiểm tra suspicious patterns trên cả `raw`, `decoded_once`, `decoded_twice`
+
+### Cache – Clear old verdicts
+
+Khi thay đổi rule engine logic, cần xoá cache cũ:
+```bash
+rm data/cache_data.pkl
+```
+Cache sẽ tự tạo lại khi có request mới.
 
 ## Contributing
 
