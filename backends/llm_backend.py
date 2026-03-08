@@ -1,6 +1,8 @@
 import os
 import logging
 import httpx
+import json
+import re
 from dotenv import load_dotenv
 
 load_dotenv(override=True)
@@ -89,7 +91,8 @@ If no malicious pattern appears in the HTTP request:
 Never classify an attack based only on RAG examples.
 """
 
-MODEL = "openai/gpt-oss-120b"
+MODEL = os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
+FALLBACK_MODEL = os.getenv("LLM_FALLBACK_MODEL", "llama-3.3-70b-versatile")
 
 
 def _env_int(name: str, default: int) -> int:
@@ -100,11 +103,90 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+USE_JSON_RESPONSE_FORMAT = _env_bool("LLM_ENFORCE_JSON_RESPONSE_FORMAT", False)
+
+
+def _create_chat_completion(messages: list[dict], max_tokens: int, model: str):
+    request = {
+        "model": model,
+        "messages": messages,
+        "temperature": 0.1,
+        "max_tokens": max_tokens,
+    }
+    if USE_JSON_RESPONSE_FORMAT:
+        request["response_format"] = {"type": "json_object"}
+
+    try:
+        return client.chat.completions.create(**request)
+    except Exception as e:
+        if request.get("response_format") and "json_validate_failed" in str(e).lower():
+            logger.warning("Groq json_validate_failed; retrying without response_format.")
+            request.pop("response_format", None)
+            return client.chat.completions.create(**request)
+        raise
+
+
+def _analyze_with_model(messages: list[dict], max_tokens: int, model: str):
+    completion = _create_chat_completion(messages, max_tokens, model)
+    verdict = completion.choices[0].message.content.strip()
+    parsed_json = _parse_json_payload(verdict)
+    if isinstance(parsed_json, dict):
+        return {
+            "analysis": parsed_json,
+            "model": model,
+            "raw_text": verdict,
+        }, verdict
+    return None, verdict
+
+
 def _truncate_text(text: str, max_chars: int) -> str:
     value = str(text or "")
     if len(value) <= max_chars:
         return value
     return value[:max_chars] + "\n... [truncated]"
+
+
+def _strip_markdown_code_fence(text: str) -> str:
+    value = str(text or "").strip()
+    if not value.startswith("```"):
+        return value
+    value = re.sub(r"^```[a-zA-Z0-9_+\-]*\s*", "", value)
+    value = re.sub(r"\s*```$", "", value)
+    return value.strip()
+
+
+def _parse_json_payload(text: str):
+    payload = _strip_markdown_code_fence(text)
+    candidates = [payload]
+
+    obj_start = payload.find("{")
+    obj_end = payload.rfind("}")
+    if obj_start != -1 and obj_end != -1 and obj_end > obj_start:
+        candidates.insert(0, payload[obj_start:obj_end + 1])
+
+    arr_start = payload.find("[")
+    arr_end = payload.rfind("]")
+    if arr_start != -1 and arr_end != -1 and arr_end > arr_start:
+        candidates.insert(0, payload[arr_start:arr_end + 1])
+
+    seen = set()
+    for candidate in candidates:
+        body = str(candidate or "").strip()
+        if not body or body in seen:
+            continue
+        seen.add(body)
+        try:
+            return json.loads(body)
+        except json.JSONDecodeError:
+            continue
+    return None
 
 
 def _bulk_max_tokens(batch_size: int) -> int:
@@ -146,30 +228,20 @@ def llm_bulk_analyze(queries: list[str], rag_contexts: list[str]) -> list[dict]:
     ]
 
     try:
-        completion = client.chat.completions.create(
-            model=MODEL,
-            messages=messages,
-            temperature=0.1,
-            max_tokens=_bulk_max_tokens(len(queries)),
-            response_format={"type": "json_object"}
-        )
+        completion = _create_chat_completion(messages, _bulk_max_tokens(len(queries)), MODEL)
         verdict = completion.choices[0].message.content.strip()
-        import json
-        try:
-            parsed = json.loads(verdict)
-            payload_list = None
-            if isinstance(parsed, dict):
-                maybe_results = parsed.get("results")
-                if isinstance(maybe_results, list):
-                    payload_list = maybe_results
-            elif isinstance(parsed, list):
-                payload_list = parsed
+        parsed = _parse_json_payload(verdict)
+        payload_list = None
+        if isinstance(parsed, dict):
+            maybe_results = parsed.get("results")
+            if isinstance(maybe_results, list):
+                payload_list = maybe_results
+        elif isinstance(parsed, list):
+            payload_list = parsed
 
-            if isinstance(payload_list, list) and len(payload_list) == len(queries):
-                return [{"analysis": obj, "model": MODEL, "raw_text": verdict} for obj in payload_list]
-            logger.warning("Bulk LLM malformed result size; fallback to single calls.")
-        except json.JSONDecodeError:
-            logger.warning("Bulk LLM returned invalid JSON; fallback to single calls.")
+        if isinstance(payload_list, list) and len(payload_list) == len(queries):
+            return [{"analysis": obj, "model": MODEL, "raw_text": verdict} for obj in payload_list]
+        logger.warning("Bulk LLM malformed or invalid JSON result; fallback to single calls.")
     except Exception as e:
         logger.warning("Bulk LLM call failed (%s): %s. Falling back to individual.", type(e).__name__, e)
 
@@ -199,44 +271,32 @@ def llm_analyze(query: str, rag_context: str) -> dict:
         },
     ]
 
-    try:
-        completion = client.chat.completions.create(
-            model=MODEL,
-            messages=messages,
-            temperature=0.1, # Lower temperature for more deterministic JSON
-            max_tokens=250,
-            response_format={"type": "json_object"} # Force JSON output if supported
-        )
-        verdict = completion.choices[0].message.content.strip()
-        
-        # The response_format={"type": "json_object"} should ensure valid JSON,
-        # so explicit markdown cleanup is less necessary.
-        # If the model still outputs markdown, the JSONDecodeError will catch it.
-            
-        import json
-        try:
-            parsed_json = json.loads(verdict)
-            return {
-                "analysis": parsed_json, 
-                "model": MODEL,
-                "raw_text": verdict
-            }
-        except json.JSONDecodeError:
-            logger.error(f"Failed to parse LLM JSON: {verdict}")
-            return {
-                "analysis": {
-                    "threat_score": 0,
-                    "attack_type": "Parse Error",
-                    "justification": "LLM failed to output valid JSON.",
-                    "action": "REVIEW",
-                    "recommendation": "Review LLM output for malformed JSON."
-                },
-                "model": MODEL,
-                "raw_text": verdict
-            }
+    primary_error = None
+    fallback_error = None
+    primary_raw = ""
+    fallback_raw = ""
 
+    try:
+        primary_result, primary_raw = _analyze_with_model(messages, 250, MODEL)
+        if primary_result is not None:
+            return primary_result
     except Exception as e:
-        logger.warning("Groq API unavailable (%s): %s. Using fallback.", type(e).__name__, e)
+        primary_error = e
+        logger.warning("Primary model call failed (%s): %s", type(e).__name__, e)
+
+    if FALLBACK_MODEL and FALLBACK_MODEL != MODEL:
+        try:
+            logger.warning("Primary model did not return valid JSON. Retrying with fallback model %s", FALLBACK_MODEL)
+            fallback_result, fallback_raw = _analyze_with_model(messages, 250, FALLBACK_MODEL)
+            if fallback_result is not None:
+                return fallback_result
+        except Exception as e:
+            fallback_error = e
+            logger.warning("Fallback model call failed (%s): %s", type(e).__name__, e)
+
+    if primary_error is not None and (not FALLBACK_MODEL or FALLBACK_MODEL == MODEL or fallback_error is not None):
+        chosen_error = fallback_error or primary_error
+        logger.warning("Groq API unavailable (%s): %s. Using fallback.", type(chosen_error).__name__, chosen_error)
         return {
             "analysis": {
                 "threat_score": 0,
@@ -247,3 +307,17 @@ def llm_analyze(query: str, rag_context: str) -> dict:
             "model": f"{MODEL} (fallback)",
             "raw_text": ""
         }
+
+    raw_for_debug = primary_raw or fallback_raw
+    logger.error("Failed to parse LLM JSON: %s", raw_for_debug)
+    return {
+        "analysis": {
+            "threat_score": 0,
+            "attack_type": "Parse Error",
+            "justification": "LLM failed to output valid JSON.",
+            "action": "REVIEW",
+            "recommendation": "Review LLM output for malformed JSON."
+        },
+        "model": MODEL,
+        "raw_text": raw_for_debug
+    }

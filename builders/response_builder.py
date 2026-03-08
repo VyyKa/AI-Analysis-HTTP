@@ -15,6 +15,39 @@ ATTACK_GROUPS = {
     "Benign": "generic",
 }
 
+SEVERITY_RANK = {
+    "Info": 0,
+    "Low": 1,
+    "Medium": 2,
+    "High": 3,
+    "Critical": 4,
+}
+
+
+def _safe_int(value, default=0):
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return default
+
+
+def _severity_from_score(score: int) -> str:
+    if score >= 9:
+        return "Critical"
+    if score >= 7:
+        return "High"
+    if score >= 4:
+        return "Medium"
+    if score >= 1:
+        return "Low"
+    return "Info"
+
+
+def _max_severity(left: str, right: str) -> str:
+    left_norm = left if left in SEVERITY_RANK else "Info"
+    right_norm = right if right in SEVERITY_RANK else "Info"
+    return left_norm if SEVERITY_RANK[left_norm] >= SEVERITY_RANK[right_norm] else right_norm
+
 def get_suggested_actions(fast_decision, blocked):
     """Generate suggested actions based on decision"""
     if blocked:
@@ -118,15 +151,21 @@ def response_builder(state: SOCState) -> dict:
             label = attack_type
             attack_type_field = attack_type.lower().replace(" ", "_")
         
-        # Calculate confidence (from LLM or rule score)
-        rule_score = item["rule_score"]
+        # Calculate final risk from both deterministic rules and LLM analysis.
+        rule_score = _safe_int(item.get("rule_score", 0))
+        llm_analysis = item.get("llm_output", {}).get("analysis", {}) if used_llm else {}
+        llm_threat_score = _safe_int(llm_analysis.get("threat_score", 0), 0)
+        risk_score = max(rule_score, llm_threat_score)
+        severity = _max_severity(item.get("severity", "Info"), _severity_from_score(risk_score))
+
+        # Calculate confidence
         if used_llm and item["llm_output"].get("confidence"):
             confidence = item["llm_output"]["confidence"]
-        elif rule_score >= 10:
+        elif risk_score >= 10:
             confidence = 0.95
-        elif rule_score >= 5:
+        elif risk_score >= 5:
             confidence = 0.85
-        elif rule_score >= 3:
+        elif risk_score >= 3:
             confidence = 0.6
         else:
             confidence = 0.4
@@ -137,8 +176,8 @@ def response_builder(state: SOCState) -> dict:
             "attack_group": ATTACK_GROUPS.get(attack_type, "generic"),
             "attack_type": attack_type_field,
             "confidence": round(confidence, 2),
-            "risk_score": int(rule_score),
-            "severity": item["severity"],
+            "risk_score": int(risk_score),
+            "severity": severity,
             "evidence": item.get("evidence", []),
             "rag_context": item.get("rag_context", ""),
             "observed_patterns": get_observed_patterns(item),

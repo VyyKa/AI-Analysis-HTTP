@@ -106,6 +106,17 @@ def is_normal_request(raw: str) -> bool:
         r"javascript\s*:",              # XSS
         r"\bunion\s+select\b",          # SQLi
         r"\bselect\s+.*\bfrom\b",       # SQLi
+        r"\bwaitfor\s+delay\b",         # time-based SQLi
+        r"\bpg_sleep\s*\(",             # PostgreSQL time-based SQLi
+        r"\bdbms_pipe\s*\.\s*receive_message\s*\(",  # Oracle time-based SQLi
+        r"\bextractvalue\s*\(",         # MySQL error-based SQLi
+        r"\bupdatexml\s*\(",            # MySQL error-based SQLi
+        r"\bxmltype\s*\(",              # Oracle XML-based SQLi
+        r"\bin\s*\(\s*select\b",      # nested select predicate
+        r"\b(?:and|or)\b\s+(?:\d+|'[a-z0-9_]{1,40}')\s*=\s*(?:\d+|'[a-z0-9_]{1,40}')",  # boolean-based SQLi
+        r"\b(?:cast|convert|chr|char)\s*\(",  # SQL function-heavy payloads
+        r"::\s*(?:text|numeric|int|bigint|varchar)\b",  # PostgreSQL cast syntax
+        r"user-agent\s*:\s*sqlmap(?:/|\b)",  # automated SQLi scanner fingerprint
         r"(\.\./){2,}",                 # Path traversal
         r"%2e%2e[/%5c]",                # Encoded traversal
         r"(;|\|)\s*(bash|sh|cmd|powershell|nc\b|wget|curl)\b",  # RCE
@@ -258,6 +269,7 @@ PATTERNS = {
             {"regex": r"\bunion\s+(all\s+)?select\b", "severity": "CRITICAL"},
             {"regex": r"\bselect\s+\*\s+from\b", "severity": "CRITICAL"},
             {"regex": r"\b(waitfor\s+delay|sleep\s*\(|benchmark\s*\(|pg_sleep\s*\()", "severity": "CRITICAL"},
+            {"regex": r"\bdbms_pipe\s*\.\s*receive_message\s*\(", "severity": "CRITICAL"},
             {"regex": r"\b(exec\s*\(|execute\s*\(|xp_cmdshell\s*\(|sp_executesql\s*\()", "severity": "CRITICAL"},
             {"regex": r"\binto\s+(outfile|dumpfile)\b", "severity": "CRITICAL"},
             {"regex": r"\binformation_schema\.(tables|columns|schemata)\b", "severity": "CRITICAL"},
@@ -270,6 +282,7 @@ PATTERNS = {
             {"regex": r";\s*(select|insert|update|delete|drop|create|alter|exec)\b", "severity": "ERROR"},
             {"regex": r"\bmysql\.(user|db|tables_priv)\b", "severity": "ERROR"},
             {"regex": r"/\*!?\d{0,5}\s*(select|union|update|delete|insert|drop|alter)\b", "severity": "ERROR"},
+            {"regex": r"user-agent\s*:\s*sqlmap(?:/|\b)", "severity": "ERROR"},
 
             # WARNING - Medium confidence
             {"regex": r"['\"]?\s+\b(and|or)\b\s+['\"]?\d+['\"]?\s*=\s*['\"]?\d+", "severity": "WARNING"},

@@ -69,7 +69,7 @@ graph.add_conditional_edges(
 graph.add_edge("rag", "llm")
 graph.add_edge("llm", "response")
 
-# cache save runs after response to persist full output snapshot
+# cache save runs after response to persist minimal cache + detailed JSONL logs
 graph.add_edge("response", "cache_save")
 graph.add_edge("cache_save", END)
 

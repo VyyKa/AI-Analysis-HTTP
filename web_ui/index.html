@@ -764,7 +764,7 @@ async function loadCacheHistory() {
       const timeStr = item.cache_written_at ? new Date(item.cache_written_at).toLocaleString('vi-VN') : 'N/A';
       return `<div class="cache-card">
         <div class="cache-card-row"><div class="cache-card-label">Cache Key:</div><div class="cache-card-value card-mono">${escapeHtml((item.cache_key||'').substring(0,20))}...</div></div>
-        <div class="cache-card-row"><div class="cache-card-label">Request:</div><div class="cache-card-value">${escapeHtml((item.raw_request||'').substring(0,100))}</div></div>
+        <div class="cache-card-row"><div class="cache-card-label">Checksum:</div><div class="cache-card-value card-mono">${escapeHtml((item.request_checksum||item.cache_key||'').substring(0,20))}...</div></div>
         <div class="cache-card-row"><div class="cache-card-label">Attack Type:</div><div class="cache-card-value">${escapeHtml(item.attack_type||'Unknown')}</div></div>
         <div class="cache-card-row"><div class="cache-card-label">Severity:</div><div class="cache-card-value severity-${sev}">${item.severity||'Info'}</div></div>
         <div class="cache-card-row"><div class="cache-card-label">Risk Score:</div><div class="cache-card-value"><strong>${item.rule_score||0}</strong></div></div>
@@ -773,8 +773,7 @@ async function loadCacheHistory() {
         <div class="cache-card-row"><div class="cache-card-label">Saved At:</div><div class="cache-card-value card-time">${timeStr}</div></div>
         <div class="cache-card-actions">
           <button class="cache-card-btn" onclick="openRawModal('${escapeAttr(item.cache_key||'')}')">View Raw</button>
-          <button class="cache-card-btn" onclick="openFullOutputModal('${escapeAttr(item.cache_key||'')}')">View Full</button>
-          <button class="cache-card-btn" onclick="copyCacheReq(this,'${escapeAttr(item.raw_request||'')}')">Copy Request</button>
+          <button class="cache-card-btn" onclick="openFullOutputModal('${escapeAttr(item.cache_key||'')}')">View Analysis</button>
           <button class="cache-card-btn" style="color:#ef4444;max-width:90px;" onclick="deleteCacheEntry(this,'${escapeAttr(item.cache_key||'')}')">Delete</button>
         </div>
       </div>`;
@@ -798,46 +797,31 @@ function openRawModal(key) {
 }
 
 async function openFullOutputModal(key) {
-  $('rawModalTitle').textContent = 'Full Cached Output';
-  $('rawContent').textContent = 'Loading full output...';
+  $('rawModalTitle').textContent = 'Detailed Analysis Log';
+  $('rawContent').textContent = 'Loading analysis log...';
   $('rawModal').classList.add('active');
 
   try {
-    const localItem = (window._cacheItems || []).find(i => i.cache_key === key);
-    if (localItem && localItem.full_output) {
-      $('rawContent').textContent = JSON.stringify(localItem.full_output, null, 2);
-      return;
-    }
-
-    const res = await fetch(`/cache/${key}`);
+    const res = await fetch(`/analysis/${key}`);
     const data = await res.json();
     if (!res.ok || data.status !== 'ok') {
-      throw new Error(data?.status || 'Failed to load cache entry');
+      throw new Error(data?.status || 'Failed to load analysis log');
     }
 
-    const entry = data.entry || {};
-    const fullOutput = entry.full_output;
-    if (!fullOutput) {
-      $('rawContent').textContent = 'No full_output found for this cache entry (likely old cache format).';
+    const analysis = data.analysis || {};
+    if (!Object.keys(analysis).length) {
+      $('rawContent').textContent = 'No analysis log found for this cache entry.';
       return;
     }
 
-    $('rawContent').textContent = JSON.stringify(fullOutput, null, 2);
+    $('rawContent').textContent = JSON.stringify(analysis, null, 2);
   } catch (err) {
-    $('rawContent').textContent = `Error loading full output: ${err.message}`;
+    $('rawContent').textContent = `Error loading analysis log: ${err.message}`;
   }
 }
 
 function closeRawModal() { $('rawModal').classList.remove('active'); }
 $('rawModal').addEventListener('click', e => { if (e.target === $('rawModal')) closeRawModal(); });
-
-async function copyCacheReq(btn, req) {
-  try {
-    await navigator.clipboard.writeText(req);
-    const t = btn.textContent; btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = t, 1000);
-  } catch { /* ignore */ }
-}
 
 async function deleteCacheEntry(btn, key) {
   if (!confirm('Delete this cache entry?')) return;

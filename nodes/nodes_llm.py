@@ -1,4 +1,7 @@
 import os
+import re
+from html import unescape
+from urllib.parse import unquote
 
 from soc_state import SOCState
 from backends.llm_backend import llm_analyze, llm_bulk_analyze
@@ -23,7 +26,59 @@ def _env_int(name: str, default: int) -> int:
 
 
 LLM_BLOCK_MIN_THREAT = _env_int("LLM_BLOCK_MIN_THREAT", 6)
-RULE_ALLOW_OVERRIDE_REVIEW_SCORE = _env_int("RULE_ALLOW_OVERRIDE_REVIEW_SCORE", 8)
+# Keep rule-first safety for medium-confidence detections even when LLM says ALLOW.
+RULE_ALLOW_OVERRIDE_REVIEW_SCORE = _env_int("RULE_ALLOW_OVERRIDE_REVIEW_SCORE", 4)
+
+
+ATTACK_HINT_PATTERNS = [
+    r"<\s*[a-z0-9:_-]*script\b",
+    r"</\s*[a-z0-9:_-]*script\s*>",
+    r"javascript\s*:",
+    r"vbscript\s*:",
+    r"on[a-z]{3,20}\s*=",
+    r"alert\s*\(",
+    r"document\.cookie",
+    r"\beval\s*\(",
+    r"/etc/(?:passwd|shadow|sudoers|hosts|crontab|group)\b",
+    r"\.\./",
+    r"\bunion\b\s+select\b",
+    r"\bor\b\s+\d+\s*=\s*\d+",
+]
+
+
+BASE64_OR_HEX_MARKER = re.compile(
+    r"(?:[A-Za-z0-9+/]{20,}={0,2})|(?:0x[0-9a-fA-F]{6,})"
+)
+
+
+def _decoded_views(raw_request: str) -> list[str]:
+    """Generate lowercased decoded variants to catch encoded attack evidence."""
+    base = str(raw_request or "")
+    views = [base]
+    current = base
+
+    for _ in range(2):
+        percent_decoded = unquote(current)
+        html_decoded = unescape(percent_decoded)
+
+        if percent_decoded not in views:
+            views.append(percent_decoded)
+        if html_decoded not in views:
+            views.append(html_decoded)
+
+        if percent_decoded == current and html_decoded == current:
+            break
+        current = percent_decoded
+
+    return [v.lower() for v in views]
+
+
+def _has_attack_markers(raw_request: str) -> bool:
+    for view in _decoded_views(raw_request):
+        for pattern in ATTACK_HINT_PATTERNS:
+            if re.search(pattern, view, flags=re.IGNORECASE):
+                return True
+    return False
 
 
 def _bulk_analyze_chunked(queries: list[str], contexts: list[str]) -> list[dict]:
@@ -67,19 +122,20 @@ def _detect_hallucination(item: dict, analysis_data: dict) -> bool:
     raw_request = item.get("raw_request", "").strip()
     justification = str(analysis_data.get("justification", "")).lower()
     
-    # Flag 1: High threat score but rule engine found nothing
+    # Flag 1: High threat score but rule engine found nothing.
+    # Keep LLM finding if request still contains clear attack signals
+    # after URL/HTML decoding (encoded attacks are common bypasses).
     if threat_score >= 6 and rule_score == 0:
-        return True
+        if not _has_attack_markers(raw_request):
+            return True
     
     # Flag 2: Request is very short/generic but LLM thinks it's an attack
     if len(raw_request) <= 10 and threat_score >= 5:
         return True
     
-    # Flag 3: LLM talks about Base64/Hex decoding but request is plain text
-    if ("base64" in justification or "decode" in justification or "encoded" in justification):
-        # Check if actual request contains Base64-like patterns
-        import re
-        if not re.search(r'[A-Za-z0-9+/]{20,}={0,2}', raw_request):
+    # Flag 3: LLM claims base64/hex decoding, but request has no such markers.
+    if "base64" in justification or "hex" in justification:
+        if not any(BASE64_OR_HEX_MARKER.search(view) for view in _decoded_views(raw_request)):
             return True
     
     return False
@@ -94,6 +150,19 @@ def _canonicalize_attack_type(value: object) -> str:
 
 def _is_specific_attack_type(value: str) -> bool:
     return value.lower() not in {"", "unknown", "normal", "benign", "none"}
+
+
+def _normalize_action(value: object) -> str:
+    raw = str(value or "").strip().upper()
+    if raw in {"ALLOW", "REVIEW", "BLOCK"}:
+        return raw
+    if "BLOCK" in raw or "DENY" in raw or "REJECT" in raw:
+        return "BLOCK"
+    if "ALLOW" in raw or "PASS" in raw:
+        return "ALLOW"
+    if "REVIEW" in raw or "MONITOR" in raw or "CHECK" in raw:
+        return "REVIEW"
+    return "REVIEW"
 
 
 def _merge_attack_type(item: dict, llm_attack_type: object) -> str:
@@ -124,7 +193,7 @@ def _apply_llm_result(item: dict, result: dict) -> None:
         threat_score = analysis_data.get("threat_score", 0)
         attack_type = _merge_attack_type(item, analysis_data.get("attack_type", "Unknown"))
         justification = analysis_data.get("justification", "")
-        action = analysis_data.get("action", "REVIEW").upper()
+        action = _normalize_action(analysis_data.get("action", "REVIEW"))
         item["attack_type"] = attack_type
         item["final_msg"] = f"[LLM] {justification} (Score: {threat_score}, Action: {action})"
 

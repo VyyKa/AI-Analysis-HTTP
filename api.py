@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 from graph_app import soc_app
-from backends.cache_backend import _CACHE, _make_key, _save_cache
+from backends.cache_backend import _CACHE, _save_cache
+from backends.analysis_log_backend import get_analysis_logs, get_latest_analysis_log
 
 WEB_UI_DIR = Path(__file__).parent / "web_ui"
 
@@ -59,6 +60,23 @@ def analyze(payload: dict):
 
 import itertools
 
+
+def _public_cache_entry(cache_key: str, value: dict) -> dict:
+    """Return safe cache entry fields (checksum-only, no raw request body)."""
+    return {
+        "cache_key": cache_key,
+        "request_checksum": value.get("request_checksum", cache_key),
+        "attack_type": value.get("attack_type", "Unknown"),
+        "severity": value.get("severity", "Info"),
+        "rule_score": value.get("rule_score", 0),
+        "fast_decision": value.get("fast_decision", "?"),
+        "blocked": value.get("blocked", False),
+        "cache_written_at": value.get("cache_written_at", None),
+        "engine_version": value.get("engine_version"),
+        "analysis_logged": value.get("analysis_logged", False),
+        "analysis_logged_at": value.get("analysis_logged_at"),
+    }
+
 @app.get("/cache/history")
 def cache_history(
     limit: int = Query(default=50, ge=1, le=500),
@@ -67,29 +85,37 @@ def cache_history(
     """Return cached analysis entries for the history view."""
     items = []
     for key, value in itertools.islice(_CACHE.items(), limit):
-        entry = {
-            "cache_key": key,
-            "raw_request": value.get("raw_request", ""),
-            "attack_type": value.get("attack_type", "Unknown"),
-            "severity": value.get("severity", "Info"),
-            "rule_score": value.get("rule_score", 0),
-            "fast_decision": value.get("fast_decision", "?"),
-            "blocked": value.get("blocked", False),
-            "cache_written_at": value.get("cache_written_at", None),
-        }
+        entry = _public_cache_entry(key, value)
         if include_full:
-            entry["full_output"] = value.get("full_output", None)
+            # Backward-compatibility field for legacy UI/export clients.
+            entry["full_output"] = None
         items.append(entry)
     return {"items": items, "total": len(_CACHE)}
 
 
 @app.get("/cache/{cache_key}")
 def get_cache_entry(cache_key: str):
-    """Get a single cache entry (including full_output if present)."""
+    """Get a single minimal cache entry by checksum key."""
     value = _CACHE.get(cache_key)
     if value is None:
         return {"status": "not_found", "cache_key": cache_key}
-    return {"status": "ok", "cache_key": cache_key, "entry": value}
+    return {"status": "ok", "cache_key": cache_key, "entry": _public_cache_entry(cache_key, value)}
+
+
+@app.get("/analysis/history")
+def analysis_history(limit: int = Query(default=50, ge=1, le=500)):
+    """Get recent detailed analysis logs."""
+    items = get_analysis_logs(limit=limit)
+    return {"items": items, "total": len(items)}
+
+
+@app.get("/analysis/{cache_key}")
+def get_analysis_entry(cache_key: str):
+    """Get the latest detailed analysis log for a specific cache key."""
+    record = get_latest_analysis_log(cache_key)
+    if record is None:
+        return {"status": "not_found", "cache_key": cache_key}
+    return {"status": "ok", "cache_key": cache_key, "analysis": record}
 
 
 @app.delete("/cache/{cache_key}")
