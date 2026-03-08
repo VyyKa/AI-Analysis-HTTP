@@ -53,6 +53,32 @@ NORMAL_REQUEST_PATTERNS = [
 _NORMAL_COMPILED = [re.compile(p, re.I) for p in NORMAL_REQUEST_PATTERNS]
 
 
+def is_obviously_benign_text(raw: str) -> bool:
+    """
+    Ultra-cheap fast-allow gate for plain text probes such as "aaaa", "hello", "abc123".
+    Keep this intentionally strict to avoid bypassing security checks.
+    """
+    text = (raw or "").strip()
+    if not text:
+        return False
+
+    if len(text) > 64:
+        return False
+
+    # Any structured request/payload should continue through normal analysis.
+    if any(ch in text for ch in "\r\n\t/?=&%<>;|`$(){}[]\\\"'"):
+        return False
+
+    if re.match(r"^(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)\s+", text, re.I):
+        return False
+
+    # Require at least one alphanumeric and limit charset to simple human text tokens.
+    if not any(ch.isalnum() for ch in text):
+        return False
+
+    return all(ch.isalnum() or ch in " _-." for ch in text)
+
+
 def is_normal_request(raw: str) -> bool:
     """
     Fast-allow check: returns True if the request matches known-benign patterns
@@ -92,6 +118,8 @@ def is_normal_request(raw: str) -> bool:
         r"%0[dD]%0[aA]|%0[aA]%0[dD]|%0[dD]|%0[aA]",
         r"(?:=|%3[dD])[^&\s]{0,50}[\r\n]",
         r"(?:\?|&)\w+=(?:[^&]*\+)?\b(?:ping|nslookup|dig|tracert|traceroute|wget|curl|bash|sh|cmd)\b",  # cmd in param
+        r"(?:;|\||&&|\|\|)\s*(?:/usr/bin/)?(?:id|whoami|uname|pwd|ls|dir|cat|type)\b",  # command enumeration in query
+        r"(?:;|\||&&|\|\|)\s*(?:system|passthru|shell_exec|popen|proc_open)\s*\(",  # function-call command injection
         r"(?:#exec|%23exec)\s+(?:cmd|cgi)\s*=",  # SSI command execution
         r"(?:=|%3[dD])[^&\s]{0,220}(?:/usr/bin/(?:id|whoami|uname|cat)|/bin/(?:id|whoami|uname|cat|sh|bash)|/etc/(?:passwd|shadow))\b",  # direct command/file probes
         r"__proto__",                   # Prototype pollution
@@ -301,6 +329,7 @@ PATTERNS = {
             # CRITICAL - Direct RCE
             {"regex": r"(?:;|\||&&|\|\|)\s*(?:bash|sh|zsh|ksh|csh|tcsh|powershell|cmd\.exe|cmd)\b", "severity": "CRITICAL"},
             {"regex": r"(?:;|\||&&|\|\|)\s*(?:wget|curl|nc|netcat|ncat|socat)\s+", "severity": "CRITICAL"},
+            {"regex": r"(?:;|\||&&|\|\|)\s*(?:system|passthru|shell_exec|popen|proc_open)\s*\(", "severity": "CRITICAL"},
             {"regex": r"(?:#exec|%23exec)\s+(?:cmd|cgi)\s*=", "severity": "CRITICAL"},
             {"regex": r"(?:=|%3[dD])[^&\s]{0,220}(?:/usr/bin/(?:id|whoami|uname|cat)|/bin/(?:id|whoami|uname|cat|sh|bash))\b", "severity": "CRITICAL"},
             {"regex": r"/bin/(?:ba)?sh\s+(?:-i|-c|\$)", "severity": "CRITICAL"},
@@ -309,6 +338,7 @@ PATTERNS = {
 
             # ERROR - High confidence
             {"regex": r"(?:;|\||&&|\|\|)\s*(?:(?:/usr/bin/)?(?:id|whoami|uname|pwd)|ls\s|dir\s|cat\s|type\s)", "severity": "CRITICAL"},
+            {"regex": r"\b(?:system|passthru|shell_exec|popen|proc_open)\s*\(\s*['\"][^'\"]{0,220}(?:/etc/(?:passwd|shadow)|/usr/bin/(?:id|whoami|uname|cat)|/bin/(?:id|whoami|uname|cat|sh|bash))", "severity": "CRITICAL"},
             {"regex": r"`[^`]{1,200}`", "severity": "ERROR"},
             {"regex": r"\$\([^)]{1,200}\)", "severity": "ERROR"},
             {"regex": r">\s*/tmp/[a-z]", "severity": "ERROR"},
@@ -549,13 +579,17 @@ PATTERNS = {
             {"regex": r"<!ENTITY\s+\w+\s+SYSTEM\b", "severity": "CRITICAL"},
             {"regex": r"\bSYSTEM\s+['\"](?:file|http|ftp|expect|php)://", "severity": "CRITICAL"},
             {"regex": r"<!ENTITY\s+%\s*\w+\s+SYSTEM\b", "severity": "CRITICAL"},  # Blind XXE
+            # Billion Laughs / entity expansion payloads in user-controlled input
+            {"regex": r"<!ENTITY\s+\w+\s+['\"][^'\"]*(?:&\w+;){4,}[^'\"]*['\"]", "severity": "CRITICAL"},
 
             # ERROR - XXE functions
             {"regex": r"\b(?:loadxml|simplexml_load_string|simplexml_load_file)\b", "severity": "ERROR"},
             {"regex": r"<!DOCTYPE\s+\w+\s*\[", "severity": "ERROR"},
+            # Internal entity declaration without SYSTEM is still suspicious in query payloads
+            {"regex": r"<!ENTITY\s+\w+\s+['\"][^'\"]{1,500}['\"]", "severity": "ERROR"},
 
             # WARNING - XML declarations with word boundaries
-            {"regex": r"<!DOCTYPE\b|<!ELEMENT\b|\bSYSTEM\b|\bPUBLIC\b", "severity": "WARNING"},
+            {"regex": r"<!DOCTYPE\b|<!ELEMENT\b|\b(?:SYSTEM|PUBLIC)\b\s+['\"][^'\"]+['\"]", "severity": "WARNING"},
         ],
     },
 
@@ -836,8 +870,20 @@ def analyze_request(raw: str) -> dict:
             })
             matched_rules.extend(attack_matches)
 
-    # No matches - escalate to LLM
+    # No matches - allow only very obvious benign text, otherwise escalate to LLM.
     if not candidates:
+        if is_obviously_benign_text(raw):
+            return {
+                "attack_type": "Normal",
+                "rule_score": 0.0,
+                "inbound_anomaly_score": 0,
+                "severity": "Info",
+                "fast_decision": "ALLOW",
+                "evidence": ["obvious_benign_text"],
+                "attack_candidates": [],
+                "requires_llm": False,
+            }
+
         return {
             "attack_type": "Unknown",
             "rule_score": 0.0,

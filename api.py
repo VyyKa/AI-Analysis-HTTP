@@ -60,7 +60,10 @@ def analyze(payload: dict):
 import itertools
 
 @app.get("/cache/history")
-def cache_history(limit: int = Query(default=50, ge=1, le=500)):
+def cache_history(
+    limit: int = Query(default=50, ge=1, le=500),
+    include_full: bool = Query(default=False),
+):
     """Return cached analysis entries for the history view."""
     items = []
     for key, value in itertools.islice(_CACHE.items(), limit):
@@ -74,8 +77,19 @@ def cache_history(limit: int = Query(default=50, ge=1, le=500)):
             "blocked": value.get("blocked", False),
             "cache_written_at": value.get("cache_written_at", None),
         }
+        if include_full:
+            entry["full_output"] = value.get("full_output", None)
         items.append(entry)
     return {"items": items, "total": len(_CACHE)}
+
+
+@app.get("/cache/{cache_key}")
+def get_cache_entry(cache_key: str):
+    """Get a single cache entry (including full_output if present)."""
+    value = _CACHE.get(cache_key)
+    if value is None:
+        return {"status": "not_found", "cache_key": cache_key}
+    return {"status": "ok", "cache_key": cache_key, "entry": value}
 
 
 @app.delete("/cache/{cache_key}")

@@ -411,7 +411,7 @@
   <div id="rawModal" class="modal">
     <div class="modal-content">
       <button class="modal-close" onclick="closeRawModal()">Close</button>
-      <h3 style="margin-top:0;">Raw Cache Entry</h3>
+      <h3 id="rawModalTitle" style="margin-top:0;">Raw Cache Entry</h3>
       <pre id="rawContent" style="margin-top:12px;font-size:12px;background:#020617;padding:12px;border-radius:8px;border:1px solid var(--border);overflow:auto;max-height:60vh;white-space:pre-wrap;word-break:break-word;"></pre>
     </div>
   </div>
@@ -773,6 +773,7 @@ async function loadCacheHistory() {
         <div class="cache-card-row"><div class="cache-card-label">Saved At:</div><div class="cache-card-value card-time">${timeStr}</div></div>
         <div class="cache-card-actions">
           <button class="cache-card-btn" onclick="openRawModal('${escapeAttr(item.cache_key||'')}')">View Raw</button>
+          <button class="cache-card-btn" onclick="openFullOutputModal('${escapeAttr(item.cache_key||'')}')">View Full</button>
           <button class="cache-card-btn" onclick="copyCacheReq(this,'${escapeAttr(item.raw_request||'')}')">Copy Request</button>
           <button class="cache-card-btn" style="color:#ef4444;max-width:90px;" onclick="deleteCacheEntry(this,'${escapeAttr(item.cache_key||'')}')">Delete</button>
         </div>
@@ -791,9 +792,42 @@ async function loadCacheHistory() {
 function openRawModal(key) {
   const item = (window._cacheItems || []).find(i => i.cache_key === key);
   if (!item) return alert('Entry not found');
+  $('rawModalTitle').textContent = 'Raw Cache Entry';
   $('rawContent').textContent = JSON.stringify(item, null, 2);
   $('rawModal').classList.add('active');
 }
+
+async function openFullOutputModal(key) {
+  $('rawModalTitle').textContent = 'Full Cached Output';
+  $('rawContent').textContent = 'Loading full output...';
+  $('rawModal').classList.add('active');
+
+  try {
+    const localItem = (window._cacheItems || []).find(i => i.cache_key === key);
+    if (localItem && localItem.full_output) {
+      $('rawContent').textContent = JSON.stringify(localItem.full_output, null, 2);
+      return;
+    }
+
+    const res = await fetch(`/cache/${key}`);
+    const data = await res.json();
+    if (!res.ok || data.status !== 'ok') {
+      throw new Error(data?.status || 'Failed to load cache entry');
+    }
+
+    const entry = data.entry || {};
+    const fullOutput = entry.full_output;
+    if (!fullOutput) {
+      $('rawContent').textContent = 'No full_output found for this cache entry (likely old cache format).';
+      return;
+    }
+
+    $('rawContent').textContent = JSON.stringify(fullOutput, null, 2);
+  } catch (err) {
+    $('rawContent').textContent = `Error loading full output: ${err.message}`;
+  }
+}
+
 function closeRawModal() { $('rawModal').classList.remove('active'); }
 $('rawModal').addEventListener('click', e => { if (e.target === $('rawModal')) closeRawModal(); });
 

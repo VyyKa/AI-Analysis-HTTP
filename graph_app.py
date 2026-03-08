@@ -50,7 +50,7 @@ graph.add_conditional_edges(
     "cache",
     route_cache_hit,
     {
-        "cache_hit": "cache_save",      # Cached, save & response
+        "cache_hit": "response",      # Cached, return response directly
         "cache_miss": "rule",            # Not cached, analyze
     },
 )
@@ -60,15 +60,17 @@ graph.add_conditional_edges(
     "router",
     route_after_rule,
     {
-        "fast": "cache_save",            # Blocked, save & response
+        "fast": "response",            # Fast decision path
         "slow": "rag",                   # Slow path should fetch RAG
     },
 )
 
-# slow path connects rag → llm → cache_save
+# slow path connects rag → llm → response
 graph.add_edge("rag", "llm")
-graph.add_edge("llm", "cache_save")
-graph.add_edge("cache_save", "response")
-graph.add_edge("response", END)
+graph.add_edge("llm", "response")
+
+# cache save runs after response to persist full output snapshot
+graph.add_edge("response", "cache_save")
+graph.add_edge("cache_save", END)
 
 soc_app = graph.compile()

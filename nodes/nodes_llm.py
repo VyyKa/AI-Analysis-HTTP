@@ -22,6 +22,10 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+LLM_BLOCK_MIN_THREAT = _env_int("LLM_BLOCK_MIN_THREAT", 6)
+RULE_ALLOW_OVERRIDE_REVIEW_SCORE = _env_int("RULE_ALLOW_OVERRIDE_REVIEW_SCORE", 8)
+
+
 def _bulk_analyze_chunked(queries: list[str], contexts: list[str]) -> list[dict]:
     if not queries:
         return []
@@ -113,6 +117,8 @@ def _merge_attack_type(item: dict, llm_attack_type: object) -> str:
 def _apply_llm_result(item: dict, result: dict) -> None:
     item["llm_output"] = result
     analysis_data = result.get("analysis", {})
+    model_name = str(result.get("model", ""))
+    llm_fallback = "(fallback)" in model_name.lower()
 
     if isinstance(analysis_data, dict):
         threat_score = analysis_data.get("threat_score", 0)
@@ -121,6 +127,17 @@ def _apply_llm_result(item: dict, result: dict) -> None:
         action = analysis_data.get("action", "REVIEW").upper()
         item["attack_type"] = attack_type
         item["final_msg"] = f"[LLM] {justification} (Score: {threat_score}, Action: {action})"
+
+        # If provider is unavailable and fallback verdict is used, avoid auto-allowing suspicious traffic.
+        rule_score = item.get("rule_score", 0)
+        if llm_fallback and isinstance(rule_score, (int, float)) and rule_score >= 5:
+            item["blocked"] = False
+            item["fast_decision"] = "REVIEW"
+            item["final_msg"] = (
+                f"[REVIEW] LLM fallback active and rule_score={rule_score}. "
+                "Requires manual review."
+            )
+            return
         
         # Check for hallucination
         hallucinated = _detect_hallucination(item, analysis_data)
@@ -131,15 +148,32 @@ def _apply_llm_result(item: dict, result: dict) -> None:
             item["blocked"] = False
             item["fast_decision"] = "ALLOW"
             item["final_msg"] = f"[HALLUCINATION_DETECTED] LLM made unfounded claim: {justification}. Marking as ALLOW."
-        elif action == "BLOCK" and isinstance(threat_score, (int, float)) and threat_score >= 6:
+        elif action == "BLOCK" and isinstance(threat_score, (int, float)) and threat_score >= LLM_BLOCK_MIN_THREAT:
             # Only BLOCK if both action=BLOCK AND threat_score is significantly high
             item["blocked"] = True
             item["fast_decision"] = "BLOCK"
-        elif action == "BLOCK" and isinstance(threat_score, (int, float)) and threat_score < 6:
+        elif action == "BLOCK" and isinstance(threat_score, (int, float)) and threat_score < LLM_BLOCK_MIN_THREAT:
             # BLOCK action without sufficient threat score -> suspicious, demote to REVIEW
             item["blocked"] = False
             item["fast_decision"] = "REVIEW"
             item["final_msg"] = f"[REVIEW] LLM suggested block but score is low ({threat_score}). Requires manual review."
+        elif action == "ALLOW":
+            item["blocked"] = False
+            if isinstance(rule_score, (int, float)) and rule_score >= RULE_ALLOW_OVERRIDE_REVIEW_SCORE and _is_specific_attack_type(attack_type):
+                # Keep high-scoring rule hits in manual review even if LLM says ALLOW.
+                item["fast_decision"] = "REVIEW"
+                item["final_msg"] = (
+                    f"[REVIEW] LLM suggested ALLOW but rule_score={rule_score} for {attack_type}. "
+                    "Requires manual review."
+                )
+            else:
+                item["fast_decision"] = "ALLOW"
+        elif action == "REVIEW":
+            item["blocked"] = False
+            item["fast_decision"] = "REVIEW"
+        else:
+            item["blocked"] = False
+            item["fast_decision"] = "REVIEW"
     else:
         item["final_msg"] = str(analysis_data)
         item["hallucination_suspected"] = False
